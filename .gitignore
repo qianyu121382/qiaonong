@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+.playwright-mcp/
+*.log
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+media/
+staticfiles/
+.DS_Store
+Thumbs.db
