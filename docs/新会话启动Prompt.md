@@ -28,7 +28,6 @@
 
 把调研结果保存在 `docs/` 下，文件名使用中文。先给我一个简短结果并和我逐块确认，不要一次输出大量架构或数据模型，也不要在未经确认时开始完整实现。
 
-我熟悉 Python、Django、Java、Scala、Vue 和 React。技术栈等页面范围明确后再一起决定，不默认使用 Wagtail。
+我熟悉 Python、Django、Java、Scala、Vue 和 React。后台技术方向已确认采用 Wagtail，但前端方案、数据模型和后台维护范围要等页面范围明确后再一起决定。
 
 ---
-
