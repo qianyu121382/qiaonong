@@ -242,9 +242,10 @@ class Command(BaseCommand):
             source_image = asset_map.get(path)
             if not source_image or not source_image.is_file():
                 continue
-            if index == 0 and not product.cover:
-                with source_image.open("rb") as image_file:
-                    product.cover.save(source_image.name, File(image_file), save=True)
+            if index == 0:
+                if not product.cover:
+                    with source_image.open("rb") as image_file:
+                        product.cover.save(source_image.name, File(image_file), save=True)
                 continue
             if ProductImage.objects.filter(product=product, alt_text=f"旧站图片 {index + 1}").exists():
                 continue
