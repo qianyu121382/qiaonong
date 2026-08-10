@@ -57,3 +57,11 @@ python manage.py import_legacy_catalog --copy-images
 ```
 
 命令可重复执行，并用旧站 ID 更新已经导入的数据。不要在内容未经人工核验时使用 `--publish-products`。公司主体、备案、联系信息和政策正文不会自动从旧站迁入。
+
+确认需要制作本地完整预览后，可显式导入旧站公开页面中可确认属于巧侬的 Logo、首页横幅、系列图片、品牌短文和客服电话：
+
+```bash
+python manage.py import_legacy_catalog --copy-images --publish-products --import-public-site
+```
+
+`--import-public-site` 不导入旧站页脚中的婵泉公司名、地址、备案号，也不填充原本为空的政策正文；已有后台内容优先，不会在重复执行时覆盖管理员后来填写的正文、图片或发布状态。

@@ -11,6 +11,14 @@ const products = ref([])
 const slideIndex = ref(0)
 const loading = ref(true)
 const currentSlide = computed(() => slides.value[slideIndex.value])
+const heroTitle = computed(() => currentSlide.value
+  ? currentSlide.value.title
+  : siteState.settings.home_title || '专注品质，认真表达')
+const heroSubtitle = computed(() => currentSlide.value
+  ? currentSlide.value.subtitle
+  : siteState.settings.home_subtitle || '巧侬企业官网正在整理经确认的品牌与产品资料。')
+const showHeroCopy = computed(() => !currentSlide.value
+  || Boolean(currentSlide.value.title || currentSlide.value.subtitle))
 
 onMounted(async () => {
   await loadSite()
@@ -30,11 +38,11 @@ onMounted(async () => {
 
 <template>
   <main>
-    <section class="hero" :style="currentSlide?.image ? { backgroundImage: `linear-gradient(90deg, rgba(15,25,20,.44), rgba(15,25,20,.05)), url(${currentSlide.image})` } : {}">
-      <div class="hero-content">
+    <section class="hero" :class="{ 'image-only': currentSlide?.image && !showHeroCopy }" :style="currentSlide?.image ? { backgroundImage: `${showHeroCopy ? 'linear-gradient(90deg, rgba(15,25,20,.44), rgba(15,25,20,.05)),' : ''} url(${currentSlide.image})` } : {}">
+      <div v-if="showHeroCopy" class="hero-content">
         <p class="eyebrow">QIAONONG · EST.</p>
-        <h1>{{ currentSlide?.title || siteState.settings.home_title || '专注品质，认真表达' }}</h1>
-        <p>{{ currentSlide?.subtitle || siteState.settings.home_subtitle || '巧侬企业官网正在整理经确认的品牌与产品资料。' }}</p>
+        <h1 v-if="heroTitle">{{ heroTitle }}</h1>
+        <p v-if="heroSubtitle">{{ heroSubtitle }}</p>
         <router-link v-if="currentSlide?.link_url" class="outline-link" :to="currentSlide.link_url">了解更多</router-link>
         <router-link v-else class="outline-link" to="/products">浏览产品</router-link>
       </div>
