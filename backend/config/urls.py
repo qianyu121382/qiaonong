@@ -7,6 +7,8 @@ from django.urls import include, path
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("apps.core.urls")),
+    path("api/catalog/", include("apps.catalog.urls")),
+    path("api/admin/catalog/", include("apps.catalog.admin_urls")),
 ]
 
 if settings.DEBUG:
