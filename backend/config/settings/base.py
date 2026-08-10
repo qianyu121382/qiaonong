@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.core.apps.CoreConfig",
     "apps.catalog.apps.CatalogConfig",
+    "apps.content.apps.ContentConfig",
 ]
 
 MIDDLEWARE = [
@@ -95,7 +96,14 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
     ],
+    "DEFAULT_THROTTLE_RATES": {
+        "admin_login": "10/minute",
+    },
 }
+
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 
 LOGGING = {
     "version": 1,

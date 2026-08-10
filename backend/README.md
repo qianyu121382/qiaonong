@@ -1,6 +1,6 @@
 # 巧侬网站后端
 
-Django + Django REST Framework 基础工程。当前只包含环境配置和健康检查，不包含产品或页面业务模型。
+Django + Django REST Framework 后端，包含管理员 Session/CSRF 认证、网站内容、产品目录、公开 API、管理 API 和旧站产品迁移命令。
 
 ## 本地初始化
 
@@ -37,3 +37,23 @@ python manage.py runserver
 ```
 
 健康检查地址：`http://127.0.0.1:8000/api/health/`。
+
+## 管理员账号
+
+巧侬管理员必须独立创建，不得复用其他项目账号：
+
+```bash
+python manage.py createsuperuser
+```
+
+交付给管理员的界面位于 `/manage/`，Django 自带管理界面只作为开发和紧急维护入口。
+
+## 旧站产品迁移
+
+默认把旧站公开归档中的产品导入为下架草稿：
+
+```bash
+python manage.py import_legacy_catalog --copy-images
+```
+
+命令可重复执行，并用旧站 ID 更新已经导入的数据。不要在内容未经人工核验时使用 `--publish-products`。公司主体、备案、联系信息和政策正文不会自动从旧站迁入。

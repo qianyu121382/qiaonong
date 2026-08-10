@@ -1,46 +1,189 @@
 :root {
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-  color: #222;
-  background: #f7f7f5;
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  color: #26322d;
+  background: #f8f8f5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  --green: #1f493b;
+  --gold: #a98655;
+  --paper: #f8f8f5;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+img { display: block; max-width: 100%; }
+a { color: inherit; }
+.site-shell { min-height: 100vh; overflow: hidden; }
+.site-header { position: relative; z-index: 30; display: grid; grid-template-columns: 190px 1fr 48px; align-items: center; min-height: 88px; padding: 0 clamp(20px, 5vw, 72px); border-bottom: 1px solid #e6e7e2; background: rgb(255 255 253 / 96%); }
+.site-logo { display: inline-flex; width: fit-content; text-decoration: none; }
+.site-logo img { max-width: 150px; max-height: 58px; object-fit: contain; }
+.site-logo span { display: grid; }
+.site-logo small, .footer-brand small { color: var(--gold); font-family: Georgia, serif; font-size: 10px; letter-spacing: .24em; }
+.site-logo strong { font-family: "Songti SC", SimSun, serif; font-size: 25px; letter-spacing: .18em; }
+.site-header nav { display: flex; justify-content: center; align-self: stretch; }
+.site-header nav > a, .nav-group > a { display: flex; align-items: center; height: 100%; padding: 0 clamp(10px, 1.45vw, 22px); font-size: 14px; text-decoration: none; white-space: nowrap; }
+.site-header nav a:hover, .site-header nav a.router-link-active { color: var(--gold); }
+.nav-group { position: relative; }
+.nav-dropdown { position: absolute; top: 100%; left: 50%; display: none; min-width: 210px; padding: 10px; transform: translateX(-50%); border: 1px solid #e2e3dd; background: #fff; box-shadow: 0 18px 40px rgb(23 42 34 / 12%); }
+.nav-dropdown a { display: block; padding: 10px 12px; font-size: 13px; text-decoration: none; }
+.nav-group:hover .nav-dropdown, .nav-group:focus-within .nav-dropdown { display: block; }
+.search-toggle { border: 0; color: var(--green); background: transparent; font-family: Georgia, serif; font-size: 29px; }
+.menu-toggle { display: none; }
+.search-panel { position: absolute; top: 100%; right: clamp(20px, 5vw, 72px); width: min(520px, calc(100vw - 40px)); padding: 20px; border: 1px solid #e2e3dd; background: #fff; box-shadow: 0 18px 40px rgb(23 42 34 / 12%); }
+.search-panel label { display: block; margin-bottom: 10px; color: #6f7773; font-size: 12px; }
+.search-panel div, .catalog-search { display: flex; }
+.search-panel input, .catalog-search input { min-width: 0; flex: 1; border: 1px solid #ced5d0; padding: 11px 13px; outline: none; }
+.search-panel button, .catalog-search button { border: 0; padding: 0 22px; color: #fff; background: var(--green); }
+.hero { position: relative; display: flex; min-height: min(700px, calc(100vh - 88px)); align-items: center; padding: clamp(70px, 12vw, 150px) clamp(24px, 9vw, 140px); color: #fff; background: radial-gradient(circle at 75% 25%, #708b7b, #254d3f 48%, #17372c); background-position: center; background-size: cover; }
+.hero-content { width: min(820px, 100%); }
+.eyebrow { margin: 0 0 16px; color: var(--gold); font-size: 11px; font-weight: 700; letter-spacing: .22em; }
+.hero h1 { max-width: 100%; margin: 0 0 22px; overflow-wrap: anywhere; font-family: Georgia, "Songti SC", serif; font-size: clamp(42px, 6vw, 78px); font-weight: 400; line-height: 1.16; letter-spacing: .04em; }
+.hero-content > p:not(.eyebrow) { max-width: 560px; margin: 0 0 34px; color: rgb(255 255 255 / 82%); font-size: clamp(16px, 2vw, 19px); line-height: 1.9; }
+.outline-link { display: inline-flex; border: 1px solid rgb(255 255 255 / 65%); padding: 12px 26px; color: #fff; text-decoration: none; }
+.outline-link.dark { border-color: var(--green); color: var(--green); }
+.slide-dots { position: absolute; bottom: 28px; left: 50%; display: flex; gap: 8px; transform: translateX(-50%); }
+.slide-dots button { width: 22px; height: 3px; border: 0; padding: 0; background: rgb(255 255 255 / 40%); }
+.slide-dots button.active { background: #fff; }
+.content-section { width: min(1280px, calc(100% - 40px)); margin: 0 auto; padding: clamp(70px, 9vw, 120px) 0; }
+.section-heading { position: relative; margin-bottom: 42px; text-align: center; }
+.section-heading h2, .brand-copy h2, .product-description h2 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: clamp(32px, 4vw, 48px); font-weight: 400; }
+.section-heading > a { position: absolute; right: 0; bottom: 8px; color: #69756f; font-size: 13px; text-decoration: none; }
+.category-section { padding-bottom: 55px; }
+.category-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.category-card { position: relative; min-height: 360px; overflow: hidden; background: #dfe7e1; text-decoration: none; }
+.category-card::after { position: absolute; inset: 0; content: ""; background: linear-gradient(0deg, rgb(12 31 24 / 62%), transparent 58%); }
+.category-card img, .category-placeholder { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.category-placeholder { background: linear-gradient(145deg, #dce6df, #88a295); }
+.category-card:hover img, .category-card:hover .category-placeholder { transform: scale(1.035); }
+.category-card span { position: absolute; right: 24px; bottom: 24px; left: 24px; z-index: 2; display: grid; gap: 7px; color: #fff; }
+.category-card small { font-size: 11px; opacity: .75; }
+.category-card strong { font-family: "Songti SC", serif; font-size: 22px; font-weight: 500; }
+.product-section { padding-top: 55px; }
+.product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 2.4vw, 32px); }
+.product-card { min-width: 0; text-decoration: none; }
+.product-image { position: relative; display: grid; aspect-ratio: 1 / 1.1; overflow: hidden; place-items: center; color: rgb(255 255 255 / 72%); background: linear-gradient(150deg, #edf0ec, #b4c2ba); font-family: Georgia, serif; letter-spacing: .2em; }
+.product-image img { width: 100%; height: 100%; object-fit: cover; transition: opacity .35s, transform .5s; }
+.product-image .hover-image { position: absolute; inset: 0; opacity: 0; }
+.product-card:hover .hover-image { opacity: 1; }
+.product-card:hover .product-image > img:first-child { transform: scale(1.025); }
+.product-meta { padding: 19px 4px 8px; text-align: center; }
+.product-meta small { color: var(--gold); font-size: 11px; }
+.product-meta h3 { margin: 8px 0 7px; font-family: "Songti SC", serif; font-size: 19px; font-weight: 500; }
+.product-meta p { display: -webkit-box; overflow: hidden; margin: 0; color: #768079; font-size: 13px; line-height: 1.7; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.brand-intro { display: grid; grid-template-columns: 1fr 1.15fr; min-height: 560px; margin-top: 70px; background: #eef1ec; }
+.brand-copy { display: flex; flex-direction: column; justify-content: center; padding: clamp(48px, 8vw, 120px); }
+.brand-copy > p:not(.eyebrow) { margin: 25px 0; color: #69736e; line-height: 2; white-space: pre-line; }
+.text-link { color: var(--green); font-size: 14px; font-weight: 700; text-decoration: none; }
+.brand-image { display: grid; min-height: 430px; place-items: center; overflow: hidden; color: rgb(255 255 255 / 80%); background: linear-gradient(135deg, #8fa799, #315b4d); font-family: Georgia, serif; font-size: 22px; letter-spacing: .25em; }
+.brand-image img { width: 100%; height: 100%; object-fit: cover; }
+.page-hero { padding: clamp(75px, 10vw, 125px) 24px; color: #fff; background: linear-gradient(120deg, #193e32, #668173); text-align: center; }
+.page-hero.compact { min-height: 330px; }
+.page-hero h1 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: clamp(38px, 5vw, 60px); font-weight: 400; }
+.page-hero > p:not(.eyebrow) { max-width: 660px; margin: 18px auto 0; color: rgb(255 255 255 / 74%); line-height: 1.8; }
+.catalog-layout { display: grid; grid-template-columns: 220px 1fr; gap: clamp(28px, 5vw, 70px); }
+.category-sidebar { display: flex; flex-direction: column; align-self: start; border-top: 1px solid #dfe3df; }
+.category-sidebar a { border-bottom: 1px solid #e3e6e3; padding: 13px 5px; color: #65716b; font-size: 13px; text-decoration: none; }
+.category-sidebar .root-category { color: #26372f; font-weight: 700; }
+.category-sidebar .child-category { padding-left: 18px; }
+.category-sidebar a.active { color: var(--gold); }
+.catalog-search { width: min(480px, 100%); margin: 0 0 34px auto; }
+.empty-state { padding: 60px 20px; color: #7a837e; text-align: center; }
+.empty-state.standalone { min-height: 520px; padding-top: 140px; }
+.empty-state h1 { color: #2a3932; font-family: Georgia, "Songti SC", serif; font-size: 40px; font-weight: 400; }
+.error-text { color: #a6453d; }
+.breadcrumb { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 28px; color: #7b847f; font-size: 12px; }
+.breadcrumb a { text-decoration: none; }
+.product-detail-page { padding-top: 42px; }
+.product-overview { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .7fr); gap: clamp(40px, 7vw, 100px); align-items: center; }
+.product-gallery { display: grid; grid-template-columns: 78px 1fr; gap: 14px; }
+.thumbnails { display: flex; flex-direction: column; gap: 10px; }
+.thumbnails button { overflow: hidden; aspect-ratio: 1; border: 1px solid transparent; padding: 0; background: #edf0ed; }
+.thumbnails button.active { border-color: var(--gold); }
+.thumbnails img { width: 100%; height: 100%; object-fit: cover; }
+.main-product-image { display: grid; aspect-ratio: 1 / 1.08; place-items: center; overflow: hidden; color: #fff; background: linear-gradient(145deg, #e5ebe7, #91a69b); font-family: Georgia, serif; letter-spacing: .2em; }
+.main-product-image img { width: 100%; height: 100%; object-fit: cover; }
+.product-summary h1 { margin: 0 0 24px; font-family: Georgia, "Songti SC", serif; font-size: clamp(34px, 4vw, 52px); font-weight: 400; line-height: 1.25; }
+.product-summary .lead { color: #68736e; line-height: 1.9; }
+.product-summary dl { margin: 28px 0; padding: 18px 0; border-top: 1px solid #dfe3df; border-bottom: 1px solid #dfe3df; }
+.product-summary dt { color: #89908c; font-size: 11px; }
+.product-summary dd { margin: 7px 0 0; }
+.product-description { max-width: 850px; margin: 110px auto 60px; text-align: center; }
+.rich-text { color: #5f6b65; line-height: 2.05; white-space: pre-wrap; }
+.product-description .rich-text { margin-top: 35px; text-align: left; }
+.detail-images { display: grid; max-width: 1000px; gap: 15px; margin: 0 auto; }
+.detail-images img { width: 100%; }
+.editorial-body { width: min(920px, calc(100% - 40px)); min-height: 400px; margin: 0 auto; padding: 80px 0 110px; }
+.editorial-body > img { width: 100%; max-height: 520px; margin-bottom: 45px; object-fit: cover; }
+.contact-grid { display: grid; grid-template-columns: 1.1fr 1fr auto; gap: clamp(30px, 7vw, 90px); align-items: start; }
+.contact-copy h2 { margin-top: 0; font-family: Georgia, "Songti SC", serif; font-size: 34px; font-weight: 400; }
+.contact-copy > p { color: #68736e; line-height: 1.9; }
+.contact-details { margin: 0; }
+.contact-details div { padding: 0 0 20px; }
+.contact-details dt { color: #969d99; font-size: 11px; }
+.contact-details dd { margin: 7px 0 0; line-height: 1.7; }
+.contact-qr { width: 150px; }
+.site-footer { padding: 70px clamp(20px, 6vw, 90px) 24px; color: #dce5e0; background: #17372c; }
+.footer-inner { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 45px; max-width: 1280px; margin: 0 auto 55px; }
+.footer-inner > div { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.footer-inner h2 { margin: 0 0 10px; color: #fff; font-size: 14px; }
+.footer-inner a { color: #aebdb6; font-size: 13px; text-decoration: none; }
+.footer-inner p { margin: 0; color: #aebdb6; font-size: 13px; line-height: 1.8; }
+.footer-brand strong { color: #fff; font-family: "Songti SC", serif; font-size: 24px; letter-spacing: .15em; }
+.footer-bottom { display: flex; justify-content: space-between; max-width: 1280px; margin: 0 auto; padding-top: 22px; border-top: 1px solid rgb(255 255 255 / 12%); color: #8fa098; font-size: 12px; }
+.footer-bottom a { text-decoration: none; }
+
+@media (max-width: 1050px) {
+  .site-header { grid-template-columns: 1fr auto auto; min-height: 72px; }
+  .menu-toggle { display: grid; width: 38px; height: 38px; border: 0; place-content: center; gap: 4px; background: transparent; }
+  .menu-toggle i { display: block; width: 20px; height: 1px; background: #27362f; }
+  .site-header nav { position: absolute; top: 100%; right: 0; left: 0; display: none; max-height: calc(100vh - 72px); overflow: auto; padding: 12px 22px 25px; border-top: 1px solid #e3e5e1; background: #fff; box-shadow: 0 18px 35px rgb(18 39 31 / 10%); }
+  .site-header nav.open { display: block; }
+  .site-header nav > a, .nav-group > a { height: auto; padding: 12px 0; border-bottom: 1px solid #edf0ed; }
+  .nav-dropdown { position: static; display: block; transform: none; border: 0; padding: 0 0 5px 18px; box-shadow: none; }
+  .nav-dropdown a { padding: 8px 0; }
+  .search-toggle { font-size: 0; }
+  .search-toggle::after { content: "搜索"; font-family: inherit; font-size: 13px; }
+  .category-grid { grid-template-columns: repeat(3, 1fr); }
+  .category-card { min-height: 320px; }
+  .footer-inner { grid-template-columns: repeat(2, 1fr); }
 }
 
-* {
-  box-sizing: border-box;
+@media (max-width: 700px) {
+  .hero { min-height: 590px; background-position: 62% center; }
+  .hero h1 { font-size: 42px; line-height: 1.3; }
+  .hero-content > p:not(.eyebrow) { overflow-wrap: anywhere; }
+  .content-section { width: min(100% - 30px, 1280px); padding: 65px 0; }
+  .section-heading { text-align: left; }
+  .section-heading > a { position: static; display: inline-block; margin-top: 15px; }
+  .category-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .category-card { min-width: 78vw; min-height: 390px; scroll-snap-align: start; }
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
+  .product-meta h3 { font-size: 16px; }
+  .product-meta p { display: none; }
+  .brand-intro { grid-template-columns: 1fr; }
+  .brand-image { min-height: 360px; grid-row: 1; }
+  .brand-copy { padding: 55px 25px; }
+  .catalog-layout { grid-template-columns: 1fr; }
+  .category-sidebar { flex-direction: row; overflow-x: auto; border: 0; }
+  .category-sidebar a { min-width: max-content; border: 1px solid #e0e4e0; padding: 9px 13px; }
+  .category-sidebar .child-category { padding-left: 13px; }
+  .catalog-search { margin-left: 0; }
+  .product-overview { grid-template-columns: 1fr; }
+  .product-gallery { grid-template-columns: 1fr; }
+  .thumbnails { grid-row: 2; flex-direction: row; overflow-x: auto; }
+  .thumbnails button { min-width: 65px; width: 65px; }
+  .product-summary { padding: 10px 4px; }
+  .product-description { margin-top: 70px; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .footer-inner { grid-template-columns: 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; gap: 10px; }
+  .page-hero.compact { min-height: 280px; }
 }
 
-body {
-  margin: 0;
-}
-
-.baseline-page {
-  display: grid;
-  min-height: 100vh;
-  padding: 24px;
-  place-items: center;
-}
-
-.baseline-page section {
-  width: min(100%, 720px);
-  padding: clamp(32px, 8vw, 72px);
-  border: 1px solid #e5e1db;
-  background: #fff;
-  text-align: center;
-}
-
-.baseline-page h1 {
-  margin: 12px 0 20px;
-  font-size: clamp(32px, 7vw, 56px);
-}
-
-.baseline-page p {
-  line-height: 1.8;
-}
-
-.baseline-page .eyebrow {
-  margin: 0;
-  color: #806b56;
-  font-size: 13px;
-  letter-spacing: 0.24em;
+@media (max-width: 420px) {
+  .product-grid { grid-template-columns: 1fr 1fr; }
+  .site-logo strong { font-size: 21px; }
+  .search-panel { right: 15px; width: calc(100vw - 30px); }
 }
