@@ -11,5 +11,8 @@ __pycache__/
 venv/
 media/
 staticfiles/
+.coverage
+.pytest_cache/
+*.sqlite3
 .DS_Store
 Thumbs.db
