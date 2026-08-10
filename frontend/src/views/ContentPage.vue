@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { api } from '../api'
+import { setPageSeo } from '../seo'
 
 
 const props = defineProps({ slug: { type: String, default: '' } })
@@ -17,7 +18,12 @@ async function load() {
   const slug = props.slug || route.params.slug
   try {
     page.value = await api(`/api/content/pages/${slug}/`)
-    document.title = `${page.value.title} - 巧侬`
+    const path = page.value.slug === 'brand' ? '/brand' : page.value.slug === 'contact' ? '/contact' : `/policy/${page.value.slug}`
+    setPageSeo({
+      title: `${page.value.title} - 巧侬花田`,
+      description: page.value.summary || page.value.body || `巧侬花田${page.value.title}。`,
+      path,
+    })
   } catch (error) {
     missing.value = error.status === 404
     page.value = null

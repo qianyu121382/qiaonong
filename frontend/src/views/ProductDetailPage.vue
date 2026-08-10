@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { api } from '../api'
+import { setPageSeo } from '../seo'
 
 
 const route = useRoute()
@@ -24,7 +25,11 @@ async function load() {
   try {
     product.value = await api(`/api/catalog/products/${route.params.slug}/`)
     selectedImage.value = product.value.cover || product.value.images?.[0]?.image || ''
-    document.title = `${product.value.name} - 巧侬`
+    setPageSeo({
+      title: `${product.value.name} - 巧侬花田`,
+      description: product.value.summary || product.value.description || `巧侬花田${product.value.name}产品资料。`,
+      path: `/product/${product.value.slug}`,
+    })
   } catch (reason) {
     error.value = reason.message
   } finally {

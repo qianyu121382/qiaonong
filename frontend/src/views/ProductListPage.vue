@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
 import ProductCard from '../components/ProductCard.vue'
 import { loadSite, siteState } from '../stores/site'
+import { setPageSeo } from '../seo'
 
 
 const props = defineProps({ searchMode: { type: Boolean, default: false } })
@@ -32,6 +33,14 @@ async function load() {
   searchInput.value = route.query.q || ''
   try {
     products.value = await api(`/api/catalog/products/?${params}`)
+    if (!props.searchMode) {
+      const title = currentCategory.value?.name || '全部产品'
+      setPageSeo({
+        title: `${title} - 巧侬花田`,
+        description: currentCategory.value?.description || '浏览巧侬花田已公开的护肤、眼部、水光、彩妆、院护及医美产品资料。',
+        path: route.params.category ? `/products/${route.params.category}` : '/products',
+      })
+    }
   } catch (reason) {
     error.value = reason.message
     products.value = []

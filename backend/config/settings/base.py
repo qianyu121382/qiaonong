@@ -90,6 +90,10 @@ STATIC_URL = "/static/"
 STATIC_ROOT = Path(os.environ.get("DJANGO_STATIC_ROOT", BASE_DIR / "staticfiles"))
 MEDIA_URL = "/media/"
 MEDIA_ROOT = Path(os.environ.get("DJANGO_MEDIA_ROOT", BASE_DIR / "media"))
+FRONTEND_DIST_ROOT = Path(
+    os.environ.get("FRONTEND_DIST_ROOT", BASE_DIR.parent / "frontend" / "dist")
+)
+PUBLIC_SITE_URL = os.environ.get("PUBLIC_SITE_URL", "https://zgqnht.com").rstrip("/")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
