@@ -31,6 +31,7 @@ function submitSearch() {
     </router-link>
     <button class="menu-toggle" :aria-expanded="menuOpen" aria-label="打开导航" @click="menuOpen = !menuOpen"><i></i><i></i><i></i></button>
     <nav :class="{ open: menuOpen }" @click="closeMenu">
+      <router-link to="/">首页</router-link>
       <router-link to="/brand">品牌介绍</router-link>
       <div v-for="category in siteState.categories" :key="category.id" class="nav-group" :class="{ 'has-children': category.children?.length }">
         <router-link :to="`/products/${category.slug}`">{{ category.name }}</router-link>
