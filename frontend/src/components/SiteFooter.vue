@@ -6,9 +6,17 @@ import { siteState } from '../stores/site'
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-brand"><small>QIAONONG</small><strong>{{ siteState.settings.site_name || '巧侬' }}</strong><p>{{ siteState.settings.footer_text }}</p></div>
-      <div><h2>网站导航</h2><router-link to="/brand">品牌介绍</router-link><router-link to="/products">产品中心</router-link><router-link to="/contact">联系我们</router-link></div>
-      <div><h2>政策信息</h2><router-link to="/policy/usage-policy">使用政策</router-link><router-link to="/policy/privacy-policy">隐私条款</router-link><router-link to="/policy/cookies-policy">Cookies 政策</router-link></div>
-      <div><h2>联系方式</h2><p v-if="siteState.settings.phone">{{ siteState.settings.phone }}</p><p v-if="siteState.settings.email">{{ siteState.settings.email }}</p><p v-if="siteState.settings.address">{{ siteState.settings.address }}</p><p v-if="!siteState.settings.phone && !siteState.settings.email && !siteState.settings.address">联系资料待更新</p></div>
+      <nav class="footer-links" aria-label="页脚导航"><router-link to="/">首页</router-link><router-link to="/brand">品牌介绍</router-link><router-link to="/products">产品中心</router-link><router-link to="/contact">联系我们</router-link></nav>
+      <div class="footer-contact">
+        <a v-if="siteState.settings.phone" class="footer-phone" :href="`tel:${siteState.settings.phone}`">{{ siteState.settings.phone }}</a>
+        <div v-if="siteState.settings.social_qr" class="footer-wechat">
+          <button type="button" aria-label="查看巧侬微信二维码">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9.6 4C5.4 4 2 6.8 2 10.2c0 1.9 1.1 3.6 2.8 4.7l-.7 2.2 2.6-1.3c.9.3 1.9.5 2.9.5h.6a5.4 5.4 0 0 1-.2-1.4c0-3.2 3-5.8 6.7-5.8h.7C16.7 6.2 13.5 4 9.6 4Zm-2.5 4.9a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/><path d="M22 14.9c0-2.7-2.7-4.9-5.9-4.9s-5.9 2.2-5.9 4.9 2.7 4.9 5.9 4.9c.8 0 1.6-.1 2.3-.4l2.1 1-.5-1.8c1.2-.9 2-2.2 2-3.7Zm-7.9-.8a.8.8 0 1 1 0-1.6.8.8 0 0 1 0 1.6Zm4 0a.8.8 0 1 1 0-1.6.8.8 0 0 1 0 1.6Z"/></svg>
+            <span>微信</span>
+          </button>
+          <div class="footer-qr-popover"><img :src="siteState.settings.social_qr" alt="巧侬微信二维码" /><small>微信扫码关注</small></div>
+        </div>
+      </div>
     </div>
     <div class="footer-bottom">
       <span>© {{ new Date().getFullYear() }} {{ siteState.settings.company_name || siteState.settings.site_name || '巧侬' }}</span>

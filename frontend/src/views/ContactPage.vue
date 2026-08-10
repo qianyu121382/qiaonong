@@ -15,7 +15,7 @@ onMounted(async () => {
 
 <template>
   <main>
-    <section class="page-hero compact"><p class="eyebrow">CONTACT</p><h1>{{ page?.title || '联系我们' }}</h1><p>{{ page?.summary || '以下联系资料由巧侬管理员维护。' }}</p></section>
+    <section class="page-hero compact"><p class="eyebrow">CONTACT</p><h1>{{ page?.title || '联系我们' }}</h1><p v-if="page?.summary">{{ page.summary }}</p></section>
     <section class="contact-grid content-section">
       <div class="contact-copy"><h2>{{ siteState.settings.company_name || '巧侬' }}</h2><div v-if="page?.body" class="rich-text">{{ page.body }}</div><p v-else>如需了解产品资料，请通过已公布的联系方式与我们联系。</p></div>
       <dl class="contact-details">

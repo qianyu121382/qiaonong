@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { api } from '../api'
 import ProductCard from '../components/ProductCard.vue'
@@ -7,10 +7,17 @@ import { loadSite, siteState } from '../stores/site'
 
 
 const slides = ref([])
-const products = ref([])
+const featuredProducts = ref([])
+const seriesProducts = ref([])
 const slideIndex = ref(0)
+const seriesIndex = ref(0)
 const loading = ref(true)
+const seriesLoading = ref(false)
+const autoplayPaused = ref(false)
+const seriesProductCache = new Map()
+let slideTimer
 const currentSlide = computed(() => slides.value[slideIndex.value])
+const currentSeries = computed(() => siteState.categories[seriesIndex.value])
 const heroTitle = computed(() => currentSlide.value
   ? currentSlide.value.title
   : siteState.settings.home_title || '专注品质，认真表达')
@@ -20,25 +27,65 @@ const heroSubtitle = computed(() => currentSlide.value
 const showHeroCopy = computed(() => !currentSlide.value
   || Boolean(currentSlide.value.title || currentSlide.value.subtitle))
 
+function nextSlide() {
+  if (!autoplayPaused.value && slides.value.length > 1) {
+    slideIndex.value = (slideIndex.value + 1) % slides.value.length
+  }
+}
+
+function selectSlide(index) {
+  slideIndex.value = index
+  window.clearInterval(slideTimer)
+  slideTimer = window.setInterval(nextSlide, 5000)
+}
+
+async function selectSeries(index) {
+  seriesIndex.value = index
+  const category = siteState.categories[index]
+  if (!category) return
+  if (seriesProductCache.has(category.slug)) {
+    seriesLoading.value = false
+    seriesProducts.value = seriesProductCache.get(category.slug)
+    return
+  }
+  seriesLoading.value = true
+  const requestedSlug = category.slug
+  try {
+    const items = await api(`/api/catalog/products/?category=${encodeURIComponent(category.slug)}`)
+    const representatives = items.slice(0, 3)
+    seriesProductCache.set(category.slug, representatives)
+    if (currentSeries.value?.slug === requestedSlug) seriesProducts.value = representatives
+  } catch {
+    if (currentSeries.value?.slug === requestedSlug) seriesProducts.value = []
+  } finally {
+    if (currentSeries.value?.slug === requestedSlug) seriesLoading.value = false
+  }
+}
+
 onMounted(async () => {
   await loadSite()
   try {
-    ;[slides.value, products.value] = await Promise.all([
+    ;[slides.value, featuredProducts.value] = await Promise.all([
       api('/api/content/slides/'),
       api('/api/catalog/products/?featured=true'),
     ])
   } catch {
     slides.value = []
-    products.value = []
+    featuredProducts.value = []
   } finally {
+    if (siteState.categories.length) await selectSeries(0)
     loading.value = false
+    if (slides.value.length > 1) slideTimer = window.setInterval(nextSlide, 5000)
   }
 })
+
+onBeforeUnmount(() => window.clearInterval(slideTimer))
 </script>
 
 <template>
   <main>
-    <section class="hero" :class="{ 'image-only': currentSlide?.image && !showHeroCopy }" :style="currentSlide?.image ? { backgroundImage: `${showHeroCopy ? 'linear-gradient(90deg, rgba(15,25,20,.44), rgba(15,25,20,.05)),' : ''} url(${currentSlide.image})` } : {}">
+    <section class="hero" :class="{ 'image-only': currentSlide?.image && !showHeroCopy, clickable: currentSlide?.link_url }" :style="currentSlide?.image ? { backgroundImage: `${showHeroCopy ? 'linear-gradient(90deg, rgba(15,25,20,.44), rgba(15,25,20,.05)),' : ''} url(${currentSlide.image})` } : {}" @mouseenter="autoplayPaused = true" @mouseleave="autoplayPaused = false" @focusin="autoplayPaused = true" @focusout="autoplayPaused = false">
+      <router-link v-if="currentSlide?.link_url" class="hero-slide-link" :to="currentSlide.link_url" :aria-label="`查看第 ${slideIndex + 1} 张轮播图内容`"></router-link>
       <div v-if="showHeroCopy" class="hero-content">
         <p class="eyebrow">QIAONONG · EST.</p>
         <h1 v-if="heroTitle">{{ heroTitle }}</h1>
@@ -46,23 +93,48 @@ onMounted(async () => {
         <router-link v-if="currentSlide?.link_url" class="outline-link" :to="currentSlide.link_url">了解更多</router-link>
         <router-link v-else class="outline-link" to="/products">浏览产品</router-link>
       </div>
-      <div v-if="slides.length > 1" class="slide-dots"><button v-for="(_, index) in slides" :key="index" :class="{ active: index === slideIndex }" :aria-label="`第 ${index + 1} 张`" @click="slideIndex = index"></button></div>
+      <div v-if="slides.length > 1" class="slide-dots"><button v-for="(_, index) in slides" :key="index" :class="{ active: index === slideIndex }" :aria-current="index === slideIndex ? 'true' : undefined" :aria-label="`切换到第 ${index + 1} 张`" @click.stop="selectSlide(index)"></button></div>
     </section>
 
-    <section class="content-section category-section">
+    <section class="content-section series-section">
       <header class="section-heading"><p class="eyebrow">PRODUCT SERIES</p><h2>产品系列</h2><router-link to="/products">查看全部</router-link></header>
-      <div v-if="siteState.categories.length" class="category-grid">
-        <router-link v-for="category in siteState.categories" :key="category.id" class="category-card" :to="`/products/${category.slug}`">
-          <img v-if="category.banner" :src="category.banner" :alt="category.name" loading="lazy" /><div class="category-placeholder" v-else></div>
-          <span><small>{{ category.children?.length }} 个系列</small><strong>{{ category.name }}</strong></span>
+      <div v-if="siteState.categories.length" class="series-tabs" role="tablist" aria-label="产品系列">
+        <button v-for="(category, index) in siteState.categories" :key="category.id" type="button" role="tab" :class="{ active: index === seriesIndex }" :aria-selected="index === seriesIndex" @click="selectSeries(index)"><small>0{{ index + 1 }}</small>{{ category.name }}</button>
+      </div>
+      <div v-if="currentSeries" class="series-showcase">
+        <router-link class="series-visual" :to="`/products/${currentSeries.slug}`">
+          <img v-if="currentSeries.banner" :src="currentSeries.banner" :alt="currentSeries.name" />
+          <div v-else class="series-placeholder"><span>QIAONONG</span></div>
+          <span class="series-visual-label">探索 {{ currentSeries.name }} <i>→</i></span>
         </router-link>
+        <div class="series-copy">
+          <div>
+            <p class="eyebrow">SELECTED SERIES</p>
+            <h3>{{ currentSeries.name }}</h3>
+            <p>{{ currentSeries.description || `浏览巧侬${currentSeries.name}已公开的系列与产品资料。` }}</p>
+            <div v-if="currentSeries.children?.length" class="series-children">
+              <router-link v-for="child in currentSeries.children" :key="child.id" :to="`/products/${child.slug}`">{{ child.name }}</router-link>
+            </div>
+          </div>
+          <div class="series-representatives">
+            <p v-if="seriesLoading" class="series-loading">正在加载代表产品…</p>
+            <template v-else>
+              <router-link v-for="product in seriesProducts" :key="product.id" :to="`/product/${product.slug}`">
+                <img v-if="product.cover" :src="product.cover" :alt="product.name" loading="lazy" />
+                <span v-else>QIAONONG</span>
+                <strong>{{ product.name }}</strong>
+              </router-link>
+            </template>
+          </div>
+          <router-link class="series-all-link" :to="`/products/${currentSeries.slug}`">查看全部 {{ currentSeries.name }}产品 <span>→</span></router-link>
+        </div>
       </div>
       <p v-else-if="!loading" class="empty-state">产品分类资料正在整理中。</p>
     </section>
 
-    <section v-if="products.length" class="content-section product-section">
+    <section v-if="featuredProducts.length" class="content-section product-section">
       <header class="section-heading"><p class="eyebrow">FEATURED</p><h2>推荐产品</h2></header>
-      <div class="product-grid"><ProductCard v-for="product in products" :key="product.id" :product="product" /></div>
+      <div class="product-grid"><ProductCard v-for="product in featuredProducts" :key="product.id" :product="product" /></div>
     </section>
 
     <section class="brand-intro">

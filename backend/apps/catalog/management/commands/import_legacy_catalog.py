@@ -292,6 +292,10 @@ class Command(BaseCommand):
                 "/uploads/image/20250120/2ca3b6295267a3c6eaae2ed1bb43138f.png"
             ),
         )
+        self.save_field_file(
+            settings.social_qr,
+            asset_map.get("/template/default/index/images/dewm.jpg"),
+        )
         settings.save()
 
         for legacy_id, slug, title in CONTENT_PAGES[:2]:

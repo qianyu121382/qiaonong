@@ -17,8 +17,10 @@ const searchInput = ref('')
 
 const flatCategories = computed(() => siteState.categories.flatMap((item) => [item, ...(item.children || [])]))
 const currentCategory = computed(() => flatCategories.value.find((item) => item.slug === route.params.category))
+const currentRootCategory = computed(() => siteState.categories.find((item) => item.slug === route.params.category || item.children?.some((child) => child.slug === route.params.category)))
+const heroImage = computed(() => props.searchMode ? '' : currentRootCategory.value?.banner || '')
 const pageTitle = computed(() => props.searchMode ? `“${route.query.q || ''}”的搜索结果` : currentCategory.value?.name || '全部产品')
-const pageDescription = computed(() => currentCategory.value?.description || (props.searchMode ? '按产品名称、标签、摘要和规格查找。' : '浏览巧侬已经公开的产品资料。'))
+const pageDescription = computed(() => currentCategory.value?.description || (props.searchMode ? '按产品名称、标签、摘要和规格查找。' : ''))
 
 async function load() {
   loading.value = true
@@ -47,7 +49,9 @@ watch(() => route.fullPath, load, { immediate: true })
 
 <template>
   <main>
-    <section class="page-hero compact"><p class="eyebrow">PRODUCTS</p><h1>{{ pageTitle }}</h1><p>{{ pageDescription }}</p></section>
+    <section class="page-hero compact" :class="{ 'with-image': heroImage }" :style="heroImage ? { backgroundImage: `linear-gradient(90deg, rgba(8,24,18,.76), rgba(8,24,18,.22) 62%, rgba(8,24,18,.06)), url(${heroImage})` } : {}">
+      <div class="page-hero-copy"><p class="eyebrow">PRODUCT SERIES</p><h1>{{ pageTitle }}</h1><p v-if="pageDescription">{{ pageDescription }}</p></div>
+    </section>
     <section class="catalog-layout content-section">
       <aside class="category-sidebar">
         <router-link :class="{ active: !route.params.category && !searchMode }" to="/products">全部产品</router-link>
