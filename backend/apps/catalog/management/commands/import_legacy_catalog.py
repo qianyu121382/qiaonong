@@ -61,6 +61,8 @@ BRAND_TEXT = (
     "每款独特的产品，都会给您带来舒适与美的享受。"
 )
 
+QIAONONG_ICP_NUMBER = "辽ICP备2026018730号-1"
+
 HOME_SLIDES = (
     ("/uploads/image/20250120/f0e207315a2c52408ff12626fbfb9d93.png", "/brand"),
     ("/uploads/image/20250120/9eccc2b1e005374cffa47341235e9b72.png", "/products/skin-care"),
@@ -278,6 +280,8 @@ class Command(BaseCommand):
         )
         if not settings.phone:
             settings.phone = "13596956311"
+        if not settings.icp_number:
+            settings.icp_number = QIAONONG_ICP_NUMBER
         if not settings.home_intro_title:
             settings.home_intro_title = "品牌介绍"
         if not settings.home_intro_body:
