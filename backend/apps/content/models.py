@@ -60,9 +60,16 @@ class HeroSlide(models.Model):
     title = models.CharField("标题", max_length=160, blank=True)
     subtitle = models.CharField("副标题", max_length=255, blank=True)
     image = models.ImageField(
-        "图片",
+        "桌面端图片",
         upload_to="content/slides/%Y/%m/",
         validators=[validate_content_image],
+    )
+    mobile_image = models.ImageField(
+        "手机端图片",
+        upload_to="content/slides/%Y/%m/",
+        validators=[validate_content_image],
+        blank=True,
+        help_text="可选；未上传时手机端使用桌面端图片。",
     )
     link_url = models.CharField("链接", max_length=255, blank=True)
     sort_order = models.PositiveIntegerField("排序", default=0, db_index=True)

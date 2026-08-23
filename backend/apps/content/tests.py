@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from .models import ContentPage, SiteSettings
+from .models import ContentPage, HeroSlide, SiteSettings
 
 
 class PublicContentApiTests(TestCase):
@@ -27,6 +27,28 @@ class PublicContentApiTests(TestCase):
             [page["slug"] for page in list_response.json()], ["brand"]
         )
         self.assertEqual(hidden_response.status_code, 404)
+
+    def test_slide_api_exposes_desktop_and_optional_mobile_images(self):
+        HeroSlide.objects.create(
+            image="content/slides/desktop.webp",
+            mobile_image="content/slides/mobile.webp",
+            is_active=True,
+        )
+
+        response = self.client.get(reverse("public-slide-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()), 1)
+        self.assertTrue(
+            response.json()[0]["image"].endswith(
+                "/media/content/slides/desktop.webp"
+            )
+        )
+        self.assertTrue(
+            response.json()[0]["mobile_image"].endswith(
+                "/media/content/slides/mobile.webp"
+            )
+        )
 
 
 class AdminContentApiTests(TestCase):

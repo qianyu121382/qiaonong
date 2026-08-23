@@ -84,7 +84,11 @@ onBeforeUnmount(() => window.clearInterval(slideTimer))
 
 <template>
   <main>
-    <section class="hero" :class="{ 'image-only': currentSlide?.image && !showHeroCopy, clickable: currentSlide?.link_url }" :style="currentSlide?.image ? { backgroundImage: `${showHeroCopy ? 'linear-gradient(90deg, rgba(15,25,20,.44), rgba(15,25,20,.05)),' : ''} url(${currentSlide.image})` } : {}" @mouseenter="autoplayPaused = true" @mouseleave="autoplayPaused = false" @focusin="autoplayPaused = true" @focusout="autoplayPaused = false">
+    <section class="hero" :class="{ 'image-only': currentSlide?.image && !showHeroCopy, 'has-image': currentSlide?.image, 'with-copy': currentSlide?.image && showHeroCopy, clickable: currentSlide?.link_url }" @mouseenter="autoplayPaused = true" @mouseleave="autoplayPaused = false" @focusin="autoplayPaused = true" @focusout="autoplayPaused = false">
+      <picture v-if="currentSlide?.image" class="hero-media">
+        <source media="(max-width: 640px)" :srcset="currentSlide.mobile_image || currentSlide.image" />
+        <img :src="currentSlide.image" :alt="currentSlide.title || '巧侬花田首页轮播图'" />
+      </picture>
       <router-link v-if="currentSlide?.link_url" class="hero-slide-link" :to="currentSlide.link_url" :aria-label="`查看第 ${slideIndex + 1} 张轮播图内容`"></router-link>
       <div v-if="showHeroCopy" class="hero-content">
         <p class="eyebrow">QIAONONG · EST.</p>

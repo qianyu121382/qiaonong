@@ -23,7 +23,7 @@ function emptyPage() {
 }
 
 function emptySlide() {
-  return { id: null, title: '', subtitle: '', link_url: '', sort_order: 0, is_active: true, image: '' }
+  return { id: null, title: '', subtitle: '', link_url: '', sort_order: 0, is_active: true, image: '', mobile_image: '' }
 }
 
 function replace(target, source) {
@@ -99,6 +99,8 @@ function slidePayload() {
   form.append('is_active', slideForm.is_active)
   const image = document.querySelector('#slide-image')?.files[0]
   if (image) form.append('image', image)
+  const mobileImage = document.querySelector('#slide-mobile-image')?.files[0]
+  if (mobileImage) form.append('mobile_image', mobileImage)
   return form
 }
 
@@ -185,12 +187,13 @@ onMounted(load)
         <div class="panel-heading"><h2>{{ slideForm.id ? '编辑轮播图' : '新增轮播图' }}</h2><button v-if="slideForm.id" class="text-button" type="button" @click="replace(slideForm, emptySlide())">新增另一张</button></div>
         <label>标题<input v-model.trim="slideForm.title" /></label><label>副标题<input v-model.trim="slideForm.subtitle" /></label>
         <label class="wide">链接<input v-model.trim="slideForm.link_url" placeholder="例如 /products/skin-care" /></label>
-        <label>图片<input id="slide-image" accept="image/jpeg,image/png,image/webp" :required="!slideForm.id" type="file" /><a v-if="slideForm.image" :href="slideForm.image" target="_blank">查看当前图片</a></label>
+        <label>桌面端图片<input id="slide-image" accept="image/jpeg,image/png,image/webp" :required="!slideForm.id" type="file" /><a v-if="slideForm.image" :href="slideForm.image" target="_blank">查看当前桌面图</a></label>
+        <label>手机端图片（可选）<input id="slide-mobile-image" accept="image/jpeg,image/png,image/webp" type="file" /><a v-if="slideForm.mobile_image" :href="slideForm.mobile_image" target="_blank">查看当前手机图</a><span v-else>未上传时使用桌面图兜底</span></label>
         <label>排序<input v-model.number="slideForm.sort_order" min="0" type="number" /></label>
         <label class="check"><input v-model="slideForm.is_active" type="checkbox" />启用</label>
         <div class="wide actions"><button class="primary-button" type="submit">保存轮播图</button></div>
       </form>
-      <div class="panel"><h2>轮播图列表</h2><div class="card-list"><article v-for="item in slides" :key="item.id"><img :src="item.image" :alt="item.title" /><div><strong>{{ item.title || '无标题轮播图' }}</strong><p>{{ item.subtitle }}</p></div><div class="row-actions"><button class="text-button" @click="replace(slideForm, { ...emptySlide(), ...item })">编辑</button><button class="text-button danger" @click="remove('slides', item.id, item.title || '轮播图')">删除</button></div></article></div></div>
+      <div class="panel"><h2>轮播图列表</h2><div class="card-list"><article v-for="item in slides" :key="item.id"><img :src="item.image" :alt="item.title" /><div><strong>{{ item.title || '无标题轮播图' }}</strong><p>{{ item.subtitle }}</p><p>手机图：<a v-if="item.mobile_image" :href="item.mobile_image" target="_blank">查看</a><span v-else>使用桌面图兜底</span></p></div><div class="row-actions"><button class="text-button" @click="replace(slideForm, { ...emptySlide(), ...item })">编辑</button><button class="text-button danger" @click="remove('slides', item.id, item.title || '轮播图')">删除</button></div></article></div></div>
     </template>
   </section>
 </template>

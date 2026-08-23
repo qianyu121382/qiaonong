@@ -35,6 +35,7 @@ class HeroSlideSerializer(serializers.ModelSerializer):
             "title",
             "subtitle",
             "image",
+            "mobile_image",
             "link_url",
             "sort_order",
             "is_active",
