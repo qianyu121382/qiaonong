@@ -21,6 +21,8 @@ ROOT_CATEGORIES = (
     ("medical-beauty", "医美产品"),
 )
 
+QIAONONG_COMPANY_NAME = "鞍山鼎禾生物制药有限公司"
+
 CHILD_CATEGORIES = (
     (8, "hydrating", "透明质酸钠保湿系列", "skin-care"),
     (9, "butylresorcinol", "4-丁基间苯二酚系列", "skin-care"),
@@ -278,6 +280,8 @@ class Command(BaseCommand):
         settings.site_name = (
             "巧侬花田" if settings.site_name in {"", "巧侬"} else settings.site_name
         )
+        if not settings.company_name:
+            settings.company_name = QIAONONG_COMPANY_NAME
         if not settings.phone:
             settings.phone = "13596956311"
         if not settings.icp_number:

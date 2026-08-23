@@ -85,6 +85,10 @@ def _render_html(*, title, description, canonical, body, image="", noindex=False
 def _organization_schema(site):
     name = site.company_name or site.site_name or "巧侬花田"
     schema = {"@context": "https://schema.org", "@type": "Organization", "name": name, "url": _site_url()}
+    if site.company_name:
+        schema["legalName"] = site.company_name
+    if site.site_name and site.site_name != name:
+        schema["alternateName"] = site.site_name
     if site.logo:
         schema["logo"] = _image_url(site.logo)
     if site.phone:

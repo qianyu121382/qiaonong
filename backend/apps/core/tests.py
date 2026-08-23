@@ -138,6 +138,7 @@ class SeoViewTests(TestCase):
         )
         SiteSettings.objects.create(
             site_name="巧侬花田",
+            company_name="鞍山鼎禾生物制药有限公司",
             home_title="巧侬花田",
             home_subtitle="巧侬品牌与产品资料",
         )
@@ -157,6 +158,9 @@ class SeoViewTests(TestCase):
         self.assertContains(response, "https://zgqnht.com/")
         self.assertContains(response, "护肤系列")
         self.assertContains(response, 'application/ld+json')
+        self.assertContains(response, '"name": "鞍山鼎禾生物制药有限公司"')
+        self.assertContains(response, '"legalName": "鞍山鼎禾生物制药有限公司"')
+        self.assertContains(response, '"alternateName": "巧侬花田"')
 
     def test_product_detail_contains_product_content(self):
         response = self.client.get(
