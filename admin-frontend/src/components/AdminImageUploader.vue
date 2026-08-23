@@ -37,6 +37,7 @@ const emit = defineEmits(['update:modelValue', 'change', 'clear'])
 
 const fileInputRef = ref(null)
 const localPreview = ref('')
+const selectedFileName = ref('')
 
 const displayUrl = computed(() => {
   if (localPreview.value) return localPreview.value
@@ -52,6 +53,7 @@ function handleFileChange(event) {
   const file = event.target.files?.[0]
   if (!file) return
 
+  selectedFileName.value = file.name
   emit('update:modelValue', file)
   emit('change', file)
 
@@ -64,6 +66,7 @@ function handleFileChange(event) {
 
 function handleClear() {
   localPreview.value = ''
+  selectedFileName.value = ''
   if (fileInputRef.value) {
     fileInputRef.value.value = ''
   }
@@ -73,66 +76,89 @@ function handleClear() {
 </script>
 
 <template>
-  <div class="uploader-component">
-    <div class="form-label">
-      <span>
+  <div class="ry-uploader-wrap">
+    <!-- Header Label -->
+    <div class="ry-uploader-label-row">
+      <span class="ry-field-label">
+        <span v-if="required" class="required">*</span>
         {{ label }}
-        <span v-if="required" class="required-dot">*</span>
       </span>
-      <span v-if="displayUrl && !localPreview" class="hint-inline">
-        <a :href="displayUrl" target="_blank" class="preview-link">
-          <AdminIcon name="external" :size="12" /> 查看原图
-        </a>
-      </span>
+      <span v-if="hint" class="ry-uploader-hint-inline">{{ hint }}</span>
     </div>
 
+    <!-- Hidden Native File Input -->
     <input
       :id="inputId"
       ref="fileInputRef"
       type="file"
-      class="uploader-file-input"
+      class="ry-hidden-file-input"
       accept="image/jpeg,image/png,image/webp"
       @change="handleFileChange"
     />
 
-    <div
-      class="uploader-box"
-      :class="{ 'has-image': Boolean(displayUrl) }"
-      @click="triggerSelect"
-    >
-      <div v-if="displayUrl" class="uploader-preview-row">
-        <div class="preview-wrapper" :style="{ aspectRatio }">
-          <img :src="displayUrl" alt="预览图" class="preview-img" />
-          <div v-if="localPreview" class="new-tag">待上传</div>
+    <!-- RuoYi / Element Plus Upload Card -->
+    <div class="ry-upload-card" :class="{ 'has-file': Boolean(displayUrl) }">
+      <!-- When an image exists (online or selected) -->
+      <div v-if="displayUrl" class="ry-upload-preview-row">
+        <div class="ry-upload-thumb-box" :style="{ aspectRatio }">
+          <img :src="displayUrl" alt="预览图" class="ry-upload-thumb-img" />
+          <div v-if="localPreview" class="ry-upload-new-badge">新选择</div>
         </div>
-        <div class="preview-meta">
-          <div class="meta-title">{{ localPreview ? '已选择新文件' : '当前线上图片' }}</div>
-          <div class="meta-hint">{{ hint }}</div>
-          <div class="meta-actions" @click.stop>
-            <button class="btn btn-sm btn-outline" type="button" @click="triggerSelect">
-              <AdminIcon name="upload" :size="14" />
-              更换图片
+
+        <div class="ry-upload-meta-box">
+          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span v-if="localPreview" class="ry-tag ry-tag-success">
+              已选文件：{{ selectedFileName || '待上传' }}
+            </span>
+            <span v-else class="ry-tag ry-tag-info">
+              当前线上图片
+            </span>
+          </div>
+
+          <div class="ry-upload-btn-group">
+            <button
+              class="ry-btn ry-btn-primary-plain ry-btn-sm"
+              type="button"
+              @click="triggerSelect"
+            >
+              <AdminIcon name="upload" :size="13" />
+              <span>更换文件</span>
             </button>
+
+            <a
+              v-if="displayUrl && !localPreview"
+              :href="displayUrl"
+              target="_blank"
+              class="ry-btn ry-btn-default ry-btn-sm"
+            >
+              <AdminIcon name="external" :size="13" />
+              <span>查看大图</span>
+            </a>
+
             <button
               v-if="localPreview"
-              class="btn btn-sm btn-danger-outline"
+              class="ry-btn ry-btn-danger-plain ry-btn-sm"
               type="button"
               @click="handleClear"
             >
-              <AdminIcon name="close" :size="14" />
-              取消选择
+              <AdminIcon name="close" :size="13" />
+              <span>取消更改</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div v-else class="uploader-empty-state">
-        <div class="upload-icon-circle">
-          <AdminIcon name="upload" :size="20" />
+      <!-- When empty / no image selected -->
+      <div v-else class="ry-upload-empty-box" @click="triggerSelect">
+        <div class="ry-upload-icon-circle">
+          <AdminIcon name="upload" :size="18" />
         </div>
-        <div class="upload-text">
-          <strong>点击上传图片</strong>
-          <span>{{ hint }}</span>
+        <div class="ry-upload-empty-text">
+          <button class="ry-btn ry-btn-primary-plain ry-btn-sm" type="button" @click.stop="triggerSelect">
+            <AdminIcon name="upload" :size="13" />
+            <span>选择文件</span>
+          </button>
+          <span class="ry-upload-empty-hint">点击选择本地图片上传</span>
         </div>
       </div>
     </div>
@@ -140,134 +166,126 @@ function handleClear() {
 </template>
 
 <style scoped>
-.uploader-component {
+.ry-uploader-wrap {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.preview-link {
-  color: var(--color-primary, #174233);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  text-decoration: none;
-}
-
-.preview-link:hover {
-  text-decoration: underline;
-}
-
-.uploader-box {
-  cursor: pointer;
-  border: 1.5px dashed var(--color-border, #e2e8e4);
-  border-radius: var(--radius-md, 10px);
-  padding: 14px 16px;
-  background: var(--color-surface-subtle, #f8faf9);
-  transition: all 0.2s ease;
-}
-
-.uploader-box:hover {
-  border-color: var(--color-primary, #174233);
-  background: var(--color-primary-subtle, #f2f7f4);
-}
-
-.uploader-empty-state {
+.ry-uploader-label-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 8px 0;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.upload-icon-circle {
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-full, 9999px);
-  background: #ffffff;
-  border: 1px solid var(--color-border, #e2e8e4);
-  color: var(--color-primary, #174233);
+.ry-uploader-hint-inline {
+  font-size: 12px;
+  color: var(--ry-text-secondary, #909399);
+}
+
+.ry-hidden-file-input {
+  display: none;
+}
+
+.ry-upload-card {
+  border: 1px dashed var(--ry-border-base, #dcdfe6);
+  border-radius: var(--ry-radius, 4px);
+  background-color: #fbfdff;
+  padding: 12px 14px;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.ry-upload-card:hover {
+  border-color: var(--ry-primary, #409eff);
+  background-color: #f5f9ff;
+}
+
+.ry-upload-card.has-file {
+  background-color: #ffffff;
+  border-style: solid;
+  border-color: var(--ry-border-lighter, #ebeef5);
+}
+
+.ry-upload-empty-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.ry-upload-icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--ry-primary-light, #ecf5ff);
+  color: var(--ry-primary, #409eff);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: var(--shadow-xs, 0 1px 2px rgba(0,0,0,0.04));
 }
 
-.upload-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.upload-text strong {
-  font-size: 13.5px;
-  color: var(--color-text-main, #192a24);
-}
-
-.upload-text span {
-  font-size: 12px;
-  color: var(--color-text-muted, #82948c);
-}
-
-.uploader-preview-row {
+.ry-upload-empty-text {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
-.preview-wrapper {
-  width: 72px;
-  height: 72px;
-  border-radius: var(--radius-sm, 6px);
+.ry-upload-empty-hint {
+  font-size: 12.5px;
+  color: var(--ry-text-secondary, #909399);
+}
+
+.ry-upload-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ry-upload-thumb-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 3px;
   overflow: hidden;
   position: relative;
-  background: #ffffff;
-  border: 1px solid var(--color-border, #e2e8e4);
+  background-color: #f4f4f5;
+  border: 1px solid var(--ry-border-light, #e4e7ed);
   flex-shrink: 0;
 }
 
-.preview-img {
+.ry-upload-thumb-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.new-tag {
+.ry-upload-new-badge {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(23, 66, 51, 0.85);
+  background-color: rgba(64, 158, 255, 0.9);
   color: #ffffff;
   font-size: 10px;
   text-align: center;
-  padding: 2px 0;
-  font-weight: 600;
+  line-height: 16px;
+  font-weight: 500;
 }
 
-.preview-meta {
+.ry-upload-meta-box {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   flex: 1;
 }
 
-.meta-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-main, #192a24);
-}
-
-.meta-hint {
-  font-size: 12px;
-  color: var(--color-text-muted, #82948c);
-}
-
-.meta-actions {
+.ry-upload-btn-group {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  flex-wrap: wrap;
 }
 </style>

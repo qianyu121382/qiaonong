@@ -35,6 +35,11 @@ const coverFile = ref(null)
 const hoverFile = ref(null)
 const galleryFile = ref(null)
 const galleryAlt = ref('')
+const galleryFileInputRef = ref(null)
+
+function triggerGallerySelect() {
+  galleryFileInputRef.value?.click()
+}
 
 const categoryOptions = computed(() =>
   categories.value.map((cat) => ({
@@ -646,26 +651,44 @@ onMounted(loadData)
             </div>
 
             <!-- Upload input -->
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                class="ry-input"
-                style="padding: 4px;"
-                @change="galleryFile = $event.target.files[0]"
-              />
+            <input
+              ref="galleryFileInputRef"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              style="display: none;"
+              @change="galleryFile = $event.target.files[0]"
+            />
+            <div style="display: flex; gap: 10px; align-items: center; background: #fafafa; padding: 10px 12px; border-radius: 4px; border: 1px dashed #dcdfe6; flex-wrap: wrap;">
+              <button
+                class="ry-btn ry-btn-primary-plain ry-btn-sm"
+                type="button"
+                @click="triggerGallerySelect"
+              >
+                <AdminIcon name="upload" :size="13" />
+                <span>{{ galleryFile ? '更换文件' : '选择图片文件' }}</span>
+              </button>
+              <span v-if="galleryFile" class="ry-tag ry-tag-success" style="font-size: 12px;">
+                {{ galleryFile.name }}
+              </span>
+              <span v-else style="font-size: 12px; color: var(--ry-text-secondary);">
+                未选择任何文件
+              </span>
+
               <input
                 v-model.trim="galleryAlt"
                 class="ry-input"
-                placeholder="图片描述（可选）"
+                style="flex: 1; min-width: 160px; height: 28px;"
+                placeholder="图片描述（例如：成分特写、包装展示）"
               />
+
               <button
-                class="ry-btn ry-btn-primary"
+                class="ry-btn ry-btn-primary ry-btn-sm"
                 type="button"
                 :disabled="!galleryFile || uploadingGallery"
                 @click="uploadGallery"
               >
-                {{ uploadingGallery ? '上传中…' : '上传相册' }}
+                <AdminIcon name="plus" :size="13" />
+                <span>{{ uploadingGallery ? '上传中…' : '上传至相册' }}</span>
               </button>
             </div>
           </div>
