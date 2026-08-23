@@ -167,6 +167,8 @@ function buildSitePayload() {
 }
 
 async function handleSaveSite() {
+  if (!window.confirm('确定要修改并保存公司信息吗？')) return
+
   saving.value = true
   try {
     const updated = await api('/api/admin/content/site/', {
