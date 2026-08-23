@@ -1,105 +1,1146 @@
+/* ========================================================
+   若依管理系统 (RuoYi-Vue3) 标准设计规范与视觉主题
+   ======================================================== */
+
 :root {
-  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
-  color: #20312b;
-  background: #f4f6f3;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  /* RuoYi Standard Color Palette */
+  --ry-primary: #409eff;
+  --ry-primary-hover: #66b1ff;
+  --ry-primary-active: #3a8ee6;
+  --ry-primary-light: #ecf5ff;
+  --ry-primary-border: #d9ecff;
+
+  --ry-success: #67c23a;
+  --ry-success-hover: #85ce61;
+  --ry-success-light: #f0f9eb;
+  --ry-success-border: #e1f3d8;
+
+  --ry-warning: #e6a23c;
+  --ry-warning-hover: #ebb563;
+  --ry-warning-light: #fdf6ec;
+  --ry-warning-border: #faecd8;
+
+  --ry-danger: #f56c6c;
+  --ry-danger-hover: #f78989;
+  --ry-danger-light: #fef0f0;
+  --ry-danger-border: #fde2e2;
+
+  --ry-info: #909399;
+  --ry-info-hover: #a6a9ad;
+  --ry-info-light: #f4f4f5;
+  --ry-info-border: #e9e9eb;
+
+  /* RuoYi Sidebar Colors */
+  --ry-sidebar-bg: #304156;
+  --ry-sidebar-logo-bg: #2b2f3a;
+  --ry-sidebar-text: #bfcbd9;
+  --ry-sidebar-active-text: #409eff;
+  --ry-sidebar-hover-bg: #263445;
+  --ry-sidebar-active-bg: #1f2d3d;
+
+  /* Neutral Surface & Borders */
+  --ry-bg: #f0f2f5;
+  --ry-surface: #ffffff;
+  --ry-border-base: #dcdfe6;
+  --ry-border-light: #e4e7ed;
+  --ry-border-lighter: #ebeef5;
+  --ry-border-extra-light: #f2f6fc;
+
+  /* Typography Colors */
+  --ry-text-primary: #303133;
+  --ry-text-regular: #606266;
+  --ry-text-secondary: #909399;
+  --ry-text-placeholder: #c0c4cc;
+
+  /* Shadows & Radius */
+  --ry-radius: 4px;
+  --ry-radius-sm: 2px;
+  --ry-radius-round: 20px;
+  --ry-radius-circle: 50%;
+
+  --ry-shadow-card: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  --ry-shadow-navbar: 0 1px 4px rgba(0, 21, 41, 0.08);
+  --ry-shadow-tags: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 0 3px 0 rgba(0, 0, 0, 0.04);
+  --ry-shadow-dialog: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-family);
+  font-size: 14px;
+  color: var(--ry-text-primary);
+  background: var(--ry-bg);
+  line-height: 1.5;
 }
 
-* { box-sizing: border-box; }
-body { margin: 0; }
-button, input, textarea, select { font: inherit; }
-button { cursor: pointer; }
-a { color: inherit; }
-
-.admin-shell { min-height: 100vh; }
-.sidebar {
-  position: fixed; inset: 0 auto 0 0; z-index: 20; display: flex; width: 248px;
-  flex-direction: column; padding: 30px 22px; color: #f4f7f2; background: #173a30;
+*, *::before, *::after {
+  box-sizing: border-box;
 }
-.brand-mark { display: grid; gap: 5px; padding: 0 12px 32px; }
-.brand-mark span, .eyebrow { color: #a8844f; font-size: 11px; font-weight: 700; letter-spacing: .2em; }
-.brand-mark strong { font-size: 20px; }
-.sidebar nav { display: grid; gap: 6px; }
-.sidebar nav a { padding: 12px 14px; border-radius: 8px; color: #d9e2de; text-decoration: none; }
-.sidebar nav a:hover, .sidebar nav a.router-link-exact-active { color: #fff; background: rgb(255 255 255 / 10%); }
-.account-block { display: grid; gap: 8px; margin-top: auto; padding: 20px 12px 0; border-top: 1px solid rgb(255 255 255 / 14%); }
-.admin-main { min-height: 100vh; margin-left: 248px; }
-.mobile-bar { display: none; }
-.page-section { width: min(1180px, 100%); margin: 0 auto; padding: 48px 34px 80px; }
-.page-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 28px; }
-.page-heading h1 { margin: 7px 0 0; font-family: Georgia, "Songti SC", serif; font-size: clamp(30px, 4vw, 44px); font-weight: 500; }
-.panel { margin-bottom: 22px; padding: 26px; border: 1px solid #e1e6e0; border-radius: 12px; background: #fff; box-shadow: 0 12px 34px rgb(31 54 46 / 5%); }
-.panel h2 { margin: 0 0 20px; font-size: 19px; }
-.panel-heading { display: flex; grid-column: 1 / -1; align-items: center; justify-content: space-between; }
-.panel-heading h2 { margin: 0; }
-.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-label { display: grid; align-content: start; gap: 8px; color: #43554e; font-size: 13px; font-weight: 600; }
-input, textarea, select { width: 100%; border: 1px solid #cfd8d3; border-radius: 7px; padding: 10px 12px; color: #20312b; background: #fff; outline: none; }
-input:focus, textarea:focus, select:focus { border-color: #437966; box-shadow: 0 0 0 3px rgb(67 121 102 / 12%); }
-textarea { line-height: 1.65; resize: vertical; }
-input[type="file"] { padding: 8px; font-weight: 400; }
-label a { color: #437966; font-weight: 400; }
-.wide { grid-column: 1 / -1; }
-.check { display: flex; flex-direction: row; align-items: center; gap: 8px; }
-.check input { width: 17px; height: 17px; }
-.actions { display: flex; justify-content: flex-end; }
-.primary-button, .secondary-button, .ghost-button { border: 0; border-radius: 7px; padding: 10px 20px; font-weight: 700; }
-.primary-button { color: #fff; background: #276450; }
-.primary-button:hover { background: #1d4e3e; }
-.secondary-button { color: #285d4b; background: #e8f0ec; }
-.ghost-button { color: inherit; background: transparent; }
-.text-button { border: 0; padding: 0; color: #a9c8bb; background: transparent; }
-.admin-main .text-button { color: #34715d; }
-.text-button.danger { color: #b54747; }
-.tabs { display: flex; gap: 6px; margin-bottom: 20px; padding: 5px; border-radius: 10px; background: #e9eeeb; }
-.tabs button { flex: 0 1 160px; border: 0; border-radius: 7px; padding: 9px 16px; color: #54635e; background: transparent; }
-.tabs button.active { color: #244f40; background: #fff; box-shadow: 0 2px 8px rgb(25 50 41 / 8%); }
-.message { margin: 0 0 18px; padding: 12px 16px; border-radius: 8px; }
-.message.error { color: #912018; background: #feeceb; }
-.message.success { color: #17613f; background: #e8f6ee; }
-.muted { color: #718079; }
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 13px 10px; border-bottom: 1px solid #edf0ed; text-align: left; font-size: 13px; white-space: nowrap; }
-th { color: #75827d; font-weight: 500; }
-.row-actions { display: flex; justify-content: flex-end; gap: 14px; }
-.status { display: inline-flex; border-radius: 99px; padding: 4px 9px; color: #17613f; background: #e8f6ee; font-size: 12px; }
-.status.off { color: #6f7773; background: #edf0ee; }
-.dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.dashboard-card { padding: 30px; border: 1px solid #dfe6e1; border-radius: 12px; background: #fff; text-decoration: none; transition: transform .2s, box-shadow .2s; }
-.dashboard-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgb(31 54 46 / 8%); }
-.dashboard-card span { color: #a8844f; font-family: Georgia, serif; font-size: 13px; }
-.dashboard-card h2 { margin: 22px 0 10px; }
-.dashboard-card p, .notice-card p { margin: 0; color: #68756f; line-height: 1.7; }
-.notice-card { margin-top: 22px; padding: 22px 26px; border-left: 3px solid #a8844f; background: #fffaf1; }
-.notice-card strong { display: block; margin-bottom: 6px; }
-.gallery-admin { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 18px; }
-.gallery-admin div { display: grid; gap: 6px; }
-.gallery-admin img { width: 110px; height: 110px; border-radius: 6px; object-fit: cover; }
-.inline-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; }
-.card-list { display: grid; gap: 12px; }
-.card-list article { display: grid; grid-template-columns: 100px 1fr auto; gap: 16px; align-items: center; padding: 12px; border: 1px solid #e7ebe8; border-radius: 8px; }
-.card-list img { width: 100px; height: 68px; border-radius: 5px; object-fit: cover; }
-.card-list p { margin: 5px 0 0; color: #77827d; }
-.login-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; background: radial-gradient(circle at top, #e9f1ed, #f7f7f4 60%); }
-.login-card { display: grid; width: min(100%, 420px); gap: 18px; padding: 42px; border: 1px solid #dfe7e2; border-radius: 14px; background: #fff; box-shadow: 0 24px 70px rgb(23 58 48 / 12%); }
-.login-card h1 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: 32px; font-weight: 500; }
-.login-card p { margin: 0; }
 
-@media (max-width: 760px) {
-  .mobile-bar { position: sticky; top: 0; z-index: 19; display: flex; align-items: center; justify-content: space-between; height: 58px; padding: 0 18px; color: #fff; background: #173a30; }
-  .sidebar { top: 58px; width: min(290px, 84vw); transform: translateX(-105%); transition: transform .2s; box-shadow: 15px 0 40px rgb(0 0 0 / 20%); }
-  .sidebar.open { transform: translateX(0); }
-  .admin-main { margin-left: 0; }
-  .page-section { padding: 30px 16px 60px; }
-  .form-grid, .dashboard-grid, .inline-form { grid-template-columns: 1fr; }
-  .wide { grid-column: auto; }
-  .tabs { overflow-x: auto; }
-  .tabs button { min-width: 110px; }
-  .panel { padding: 20px 16px; }
-  .card-list article { grid-template-columns: 76px 1fr; }
-  .card-list img { width: 76px; height: 58px; }
-  .card-list .row-actions { grid-column: 1 / -1; justify-content: flex-start; }
-  .login-card { padding: 30px 24px; }
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--ry-bg);
+  color: var(--ry-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--ry-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--ry-primary-hover);
+}
+
+/* ========================================================
+   RuoYi Layout Shell
+   ======================================================== */
+.ry-app-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* Left Sidebar */
+.ry-sidebar-container {
+  width: 220px;
+  background-color: var(--ry-sidebar-bg);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1001;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.28s;
+  box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+}
+
+.ry-sidebar-logo {
+  position: relative;
+  width: 100%;
+  height: 50px;
+  line-height: 50px;
+  background: var(--ry-sidebar-logo-bg);
+  text-align: center;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+}
+
+.ry-logo-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--ry-primary);
+  color: #ffffff;
+  border-radius: var(--ry-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.ry-logo-title {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.ry-menu {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  list-style: none;
+  margin: 0;
+}
+
+.ry-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 50px;
+  line-height: 50px;
+  padding: 0 20px;
+  color: var(--ry-sidebar-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.ry-menu-item:hover {
+  background-color: var(--ry-sidebar-hover-bg);
+  color: #ffffff;
+}
+
+.ry-menu-item.router-link-exact-active {
+  color: var(--ry-sidebar-active-text) !important;
+  background-color: var(--ry-sidebar-active-bg) !important;
+}
+
+.ry-menu-item.router-link-exact-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--ry-primary);
+}
+
+.ry-menu-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Main Container */
+.ry-main-container {
+  min-height: 100vh;
+  margin-left: 220px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--ry-bg);
+  transition: margin-left 0.28s;
+}
+
+/* Top Navbar */
+.ry-navbar {
+  height: 50px;
+  overflow: hidden;
+  position: relative;
+  background: var(--ry-surface);
+  box-shadow: var(--ry-shadow-navbar);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 10;
+}
+
+.ry-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ry-hamburger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  color: #5a5e66;
+}
+
+.ry-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ry-text-secondary);
+}
+
+.ry-breadcrumb-item {
+  color: var(--ry-text-secondary);
+}
+
+.ry-breadcrumb-separator {
+  color: var(--ry-border-base);
+  margin: 0 2px;
+}
+
+.ry-breadcrumb-active {
+  color: var(--ry-text-regular);
+  font-weight: 500;
+}
+
+.ry-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ry-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ry-text-regular);
+  padding: 6px 10px;
+  border-radius: var(--ry-radius);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ry-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--ry-primary);
+}
+
+.ry-user-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--ry-radius);
+}
+
+.ry-user-dropdown:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.ry-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ry-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ry-user-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ry-text-primary);
+}
+
+/* TagsView (RuoYi Multi-tab Bar) */
+.ry-tags-view-container {
+  height: 34px;
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #d8dce5;
+  box-shadow: var(--ry-shadow-tags);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.ry-tags-view-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+  cursor: pointer;
+  height: 26px;
+  line-height: 26px;
+  border: 1px solid #d8dce5;
+  color: #495060;
+  background: #ffffff;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 2px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.ry-tags-view-item:hover {
+  border-color: var(--ry-primary);
+  color: var(--ry-primary);
+}
+
+.ry-tags-view-item.active {
+  background-color: var(--ry-primary);
+  color: #ffffff;
+  border-color: var(--ry-primary);
+}
+
+.ry-tags-view-item.active::before {
+  content: "";
+  background: #ffffff;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 2px;
+}
+
+.ry-tags-close-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #909399;
+  transition: all 0.15s;
+}
+
+.ry-tags-view-item.active .ry-tags-close-icon {
+  color: #ffffff;
+}
+
+.ry-tags-close-icon:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+}
+
+/* App Main Content Area */
+.ry-app-main {
+  flex: 1;
+  padding: 16px;
+  background-color: var(--ry-bg);
+  box-sizing: border-box;
+}
+
+/* ========================================================
+   RuoYi Cards & Panels (el-card)
+   ======================================================== */
+.ry-card {
+  background-color: var(--ry-surface);
+  border: 1px solid var(--ry-border-lighter);
+  border-radius: var(--ry-radius);
+  box-shadow: var(--ry-shadow-card);
+  margin-bottom: 16px;
+  transition: box-shadow 0.2s;
+}
+
+.ry-card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--ry-border-lighter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ry-card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ry-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ry-card-body {
+  padding: 18px 20px;
+}
+
+/* ========================================================
+   RuoYi Form Elements (el-form, el-input, el-select)
+   ======================================================== */
+.ry-query-card {
+  background-color: #ffffff;
+  border: 1px solid var(--ry-border-lighter);
+  border-radius: var(--ry-radius);
+  padding: 16px 18px 2px;
+  margin-bottom: 16px;
+}
+
+.ry-form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.ry-form-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ry-form-label {
+  font-size: 13.5px;
+  color: var(--ry-text-regular);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ry-input,
+.ry-select,
+.ry-textarea {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--ry-border-base);
+  border-radius: var(--ry-radius);
+  background-color: #ffffff;
+  color: var(--ry-text-primary);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ry-textarea {
+  height: auto;
+  line-height: 1.5;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.ry-input:focus,
+.ry-select:focus,
+.ry-textarea:focus {
+  border-color: var(--ry-primary);
+  box-shadow: 0 0 0 2px var(--ry-primary-light);
+}
+
+.ry-input::placeholder,
+.ry-textarea::placeholder {
+  color: var(--ry-text-placeholder);
+}
+
+/* ========================================================
+   RuoYi Buttons (el-button)
+   ======================================================== */
+.ry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--ry-radius);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ry-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Primary Blue */
+.ry-btn-primary {
+  background-color: var(--ry-primary);
+  border-color: var(--ry-primary);
+  color: #ffffff;
+}
+.ry-btn-primary:hover:not(:disabled) {
+  background-color: var(--ry-primary-hover);
+  border-color: var(--ry-primary-hover);
+}
+
+/* Plain Primary */
+.ry-btn-primary-plain {
+  background-color: var(--ry-primary-light);
+  border-color: var(--ry-primary-border);
+  color: var(--ry-primary);
+}
+.ry-btn-primary-plain:hover:not(:disabled) {
+  background-color: var(--ry-primary);
+  border-color: var(--ry-primary);
+  color: #ffffff;
+}
+
+/* Success Green */
+.ry-btn-success {
+  background-color: var(--ry-success);
+  border-color: var(--ry-success);
+  color: #ffffff;
+}
+.ry-btn-success:hover:not(:disabled) {
+  background-color: var(--ry-success-hover);
+  border-color: var(--ry-success-hover);
+}
+
+.ry-btn-success-plain {
+  background-color: var(--ry-success-light);
+  border-color: var(--ry-success-border);
+  color: var(--ry-success);
+}
+.ry-btn-success-plain:hover:not(:disabled) {
+  background-color: var(--ry-success);
+  border-color: var(--ry-success);
+  color: #ffffff;
+}
+
+/* Warning Orange */
+.ry-btn-warning-plain {
+  background-color: var(--ry-warning-light);
+  border-color: var(--ry-warning-border);
+  color: var(--ry-warning);
+}
+
+/* Danger Red */
+.ry-btn-danger-plain {
+  background-color: var(--ry-danger-light);
+  border-color: var(--ry-danger-border);
+  color: var(--ry-danger);
+}
+.ry-btn-danger-plain:hover:not(:disabled) {
+  background-color: var(--ry-danger);
+  border-color: var(--ry-danger);
+  color: #ffffff;
+}
+
+/* Default / White */
+.ry-btn-default {
+  background-color: #ffffff;
+  border-color: var(--ry-border-base);
+  color: var(--ry-text-regular);
+}
+.ry-btn-default:hover:not(:disabled) {
+  background-color: var(--ry-primary-light);
+  border-color: var(--ry-primary-border);
+  color: var(--ry-primary);
+}
+
+/* Small Buttons */
+.ry-btn-sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+/* Text Buttons in Table Action */
+.ry-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ry-primary);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.ry-link-btn:hover {
+  color: var(--ry-primary-hover);
+}
+
+.ry-link-btn.danger {
+  color: var(--ry-danger);
+}
+
+.ry-link-btn.danger:hover {
+  color: var(--ry-danger-hover);
+}
+
+/* ========================================================
+   RuoYi Table (el-table)
+   ======================================================== */
+.ry-table-card {
+  background-color: #ffffff;
+  border: 1px solid var(--ry-border-lighter);
+  border-radius: var(--ry-radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.ry-toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ry-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ry-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ry-tool-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--ry-border-base);
+  background: #ffffff;
+  color: var(--ry-text-regular);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ry-tool-btn:hover {
+  border-color: var(--ry-primary);
+  color: var(--ry-primary);
+}
+
+.ry-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--ry-border-lighter);
+  border-bottom: none;
+}
+
+.ry-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ry-table th {
+  background-color: #f8f8f9;
+  color: #515a6e;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--ry-border-lighter);
+  white-space: nowrap;
+}
+
+.ry-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ry-border-lighter);
+  font-size: 13.5px;
+  color: var(--ry-text-regular);
+  background: #ffffff;
+  vertical-align: middle;
+}
+
+.ry-table tr:nth-child(even) td {
+  background-color: #fafafa;
+}
+
+.ry-table tr:hover td {
+  background-color: #f5f7fa;
+}
+
+.ry-product-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 3px;
+  object-fit: cover;
+  border: 1px solid var(--ry-border-light);
+  display: block;
+}
+
+/* ========================================================
+   RuoYi Tags (el-tag)
+   ======================================================== */
+.ry-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  line-height: 22px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.ry-tag-primary {
+  background-color: var(--ry-primary-light);
+  border-color: var(--ry-primary-border);
+  color: var(--ry-primary);
+}
+
+.ry-tag-success {
+  background-color: var(--ry-success-light);
+  border-color: var(--ry-success-border);
+  color: var(--ry-success);
+}
+
+.ry-tag-warning {
+  background-color: var(--ry-warning-light);
+  border-color: var(--ry-warning-border);
+  color: var(--ry-warning);
+}
+
+.ry-tag-danger {
+  background-color: var(--ry-danger-light);
+  border-color: var(--ry-danger-border);
+  color: var(--ry-danger);
+}
+
+.ry-tag-info {
+  background-color: var(--ry-info-light);
+  border-color: var(--ry-info-border);
+  color: var(--ry-info);
+}
+
+/* ========================================================
+   RuoYi Pagination (el-pagination)
+   ======================================================== */
+.ry-pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding: 4px 0;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--ry-text-regular);
+}
+
+.ry-page-btn {
+  height: 28px;
+  min-width: 28px;
+  padding: 0 6px;
+  background-color: #f4f4f5;
+  color: var(--ry-text-regular);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ry-page-btn:hover:not(:disabled) {
+  color: var(--ry-primary);
+}
+
+.ry-page-btn:disabled {
+  color: var(--ry-text-placeholder);
+  cursor: not-allowed;
+}
+
+.ry-page-current {
+  background-color: var(--ry-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ========================================================
+   RuoYi Dialog (el-dialog)
+   ======================================================== */
+.ry-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.ry-dialog {
+  width: min(720px, 100%);
+  max-height: 88vh;
+  background: #ffffff;
+  border-radius: var(--ry-radius);
+  box-shadow: var(--ry-shadow-dialog);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ry-dialog-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ry-border-lighter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ry-dialog-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ry-text-primary);
+}
+
+.ry-dialog-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: var(--ry-text-secondary);
+  cursor: pointer;
+}
+
+.ry-dialog-close:hover {
+  color: var(--ry-primary);
+}
+
+.ry-dialog-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ry-dialog-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--ry-border-lighter);
+  background-color: #fbfbfb;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Dialog Form Layout */
+.ry-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ry-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.ry-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ry-form-field.full {
+  grid-column: 1 / -1;
+}
+
+.ry-field-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ry-text-regular);
+}
+
+.ry-field-label .required {
+  color: var(--ry-danger);
+  margin-right: 3px;
+}
+
+/* Radio buttons & Switch */
+.ry-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 32px;
+}
+
+.ry-radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--ry-text-regular);
+}
+
+/* Upload Avatar/Box */
+.ry-upload-box {
+  border: 1px dashed var(--ry-border-base);
+  border-radius: var(--ry-radius);
+  padding: 14px;
+  background-color: #fafafa;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ry-upload-box:hover {
+  border-color: var(--ry-primary);
+}
+
+/* ========================================================
+   RuoYi Dashboard / Home Layout
+   ======================================================== */
+.ry-dashboard-welcome {
+  background: #ffffff;
+  border-radius: var(--ry-radius);
+  border: 1px solid var(--ry-border-lighter);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ry-welcome-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ry-text-primary);
+}
+
+.ry-welcome-desc {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ry-text-secondary);
+}
+
+.ry-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ry-stat-card {
+  background: #ffffff;
+  border-radius: var(--ry-radius);
+  border: 1px solid var(--ry-border-lighter);
+  box-shadow: var(--ry-shadow-card);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ry-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ry-stat-label {
+  font-size: 13px;
+  color: var(--ry-text-secondary);
+}
+
+.ry-stat-val {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ry-text-primary);
+  margin-top: 4px;
+}
+
+.ry-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--ry-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.ry-stat-icon-blue {
+  background: #ecf5ff;
+  color: #409eff;
+}
+
+.ry-stat-icon-green {
+  background: #f0f9eb;
+  color: #67c23a;
+}
+
+.ry-stat-icon-orange {
+  background: #fdf6ec;
+  color: #e6a23c;
+}
+
+.ry-stat-icon-purple {
+  background: #f4ecfd;
+  color: #8e44ad;
+}
+
+/* ========================================================
+   RuoYi Login Page
+   ======================================================== */
+.ry-login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #2d3a4b;
+  background-image: linear-gradient(135deg, #2d3a4b 0%, #1f2833 100%);
+}
+
+.ry-login-form {
+  border-radius: 6px;
+  background: #ffffff;
+  width: 400px;
+  padding: 28px 32px 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.ry-login-title {
+  margin: 0 auto 24px auto;
+  text-align: center;
+  color: #409eff;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.ry-login-sub {
+  margin: -16px 0 20px 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ry-text-secondary);
+}
+
+.ry-login-item {
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.ry-login-input {
+  width: 100%;
+  height: 40px;
+  line-height: 40px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  padding: 0 12px 0 36px;
+  font-size: 14px;
+  outline: none;
+}
+
+.ry-login-input:focus {
+  border-color: var(--ry-primary);
+}
+
+.ry-login-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #909399;
+}
+
+.ry-login-btn {
+  width: 100%;
+  height: 40px;
+  font-size: 15px;
+  margin-top: 6px;
+}
+
+.ry-login-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: #909399;
 }
