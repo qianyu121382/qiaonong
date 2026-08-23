@@ -4,7 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import ContentPage, HeroSlide, SiteSettings
-from .serializers import ContentPageSerializer, HeroSlideSerializer, SiteSettingsSerializer
+from .serializers import (
+    AdminSiteSettingsSerializer,
+    ContentPageSerializer,
+    HeroSlideSerializer,
+    SiteSettingsSerializer,
+)
 
 
 class PublicSiteSettingsView(APIView):
@@ -33,7 +38,7 @@ class PublicContentPageViewSet(viewsets.ReadOnlyModelViewSet):
 
 class AdminSiteSettingsView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAdminUser]
-    serializer_class = SiteSettingsSerializer
+    serializer_class = AdminSiteSettingsSerializer
 
     def get_object(self):
         settings, _ = SiteSettings.objects.get_or_create(pk=1)
@@ -46,7 +51,7 @@ class AdminHeroSlideViewSet(viewsets.ModelViewSet):
     queryset = HeroSlide.objects.all()
 
 
-class AdminContentPageViewSet(viewsets.ModelViewSet):
+class AdminContentPageViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAdminUser]
     serializer_class = ContentPageSerializer
     queryset = ContentPage.objects.all()

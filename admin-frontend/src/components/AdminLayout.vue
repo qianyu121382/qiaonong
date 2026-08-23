@@ -27,8 +27,9 @@ async function signOut() {
       </div>
       <nav @click="menuOpen = false">
         <router-link to="/">工作台</router-link>
-        <router-link to="/catalog">产品管理</router-link>
-        <router-link to="/content">网站内容</router-link>
+        <router-link to="/products">产品管理</router-link>
+        <router-link to="/carousel">首页轮播</router-link>
+        <router-link to="/company">公司信息</router-link>
       </nav>
       <div class="account-block">
         <span>{{ authState.user?.display_name }}</span>

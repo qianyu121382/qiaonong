@@ -63,35 +63,61 @@ class AdminContentApiTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-    def test_staff_can_update_single_site_settings_record(self):
+    def test_staff_can_update_only_company_information(self):
+        settings = SiteSettings.objects.create(
+            site_name="巧侬",
+            home_title="固定首页标题",
+        )
         self.client.force_authenticate(self.staff)
 
         response = self.client.patch(
             reverse("admin-site-settings"),
-            {"site_name": "巧侬官网", "phone": "待确认"},
+            {
+                "site_name": "不允许修改的网站名称",
+                "home_title": "不允许修改的首页标题",
+                "company_name": "鞍山鼎禾生物制药有限公司",
+                "phone": "待确认",
+            },
             format="json",
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(SiteSettings.objects.count(), 1)
-        self.assertEqual(SiteSettings.objects.get().site_name, "巧侬官网")
+        settings.refresh_from_db()
+        self.assertEqual(settings.site_name, "巧侬")
+        self.assertEqual(settings.home_title, "固定首页标题")
+        self.assertEqual(settings.company_name, "鞍山鼎禾生物制药有限公司")
+        self.assertEqual(settings.phone, "待确认")
 
-    def test_staff_can_create_and_publish_content_page(self):
+    def test_staff_can_read_content_pages_but_cannot_modify_them(self):
+        page = ContentPage.objects.create(
+            slug="brand", title="品牌介绍", is_active=True
+        )
         self.client.force_authenticate(self.staff)
 
-        response = self.client.post(
+        list_response = self.client.get(reverse("admin-content-page-list"))
+        create_response = self.client.post(
             reverse("admin-content-page-list"),
             {
-                "slug": "brand",
-                "title": "品牌介绍",
+                "slug": "privacy",
+                "title": "隐私条款",
                 "body": "经确认的品牌内容",
                 "is_active": True,
             },
             format="json",
         )
-
-        self.assertEqual(response.status_code, 201)
-        public_response = self.client.get(
-            reverse("public-content-page-detail", kwargs={"slug": "brand"})
+        update_response = self.client.patch(
+            reverse("admin-content-page-detail", kwargs={"pk": page.pk}),
+            {"title": "被修改"},
+            format="json",
         )
-        self.assertEqual(public_response.status_code, 200)
+        delete_response = self.client.delete(
+            reverse("admin-content-page-detail", kwargs={"pk": page.pk})
+        )
+
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(create_response.status_code, 405)
+        self.assertEqual(update_response.status_code, 405)
+        self.assertEqual(delete_response.status_code, 405)
+        page.refresh_from_db()
+        self.assertEqual(page.title, "品牌介绍")

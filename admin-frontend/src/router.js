@@ -17,8 +17,11 @@ const router = createRouter({
       component: AdminLayout,
       children: [
         { path: '', name: 'dashboard', component: DashboardPage },
-        { path: 'catalog', name: 'catalog', component: CatalogPage },
-        { path: 'content', name: 'content', component: ContentPage },
+        { path: 'products', name: 'products', component: CatalogPage },
+        { path: 'carousel', name: 'carousel', component: ContentPage, props: { mode: 'carousel' } },
+        { path: 'company', name: 'company', component: ContentPage, props: { mode: 'company' } },
+        { path: 'catalog', redirect: '/products' },
+        { path: 'content', redirect: '/company' },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },

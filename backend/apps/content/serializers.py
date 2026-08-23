@@ -27,6 +27,24 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
         read_only_fields = ("updated_at",)
 
 
+class AdminSiteSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteSettings
+        fields = (
+            "company_name",
+            "phone",
+            "email",
+            "address",
+            "logo",
+            "social_qr",
+            "footer_text",
+            "icp_number",
+            "icp_url",
+            "updated_at",
+        )
+        read_only_fields = ("updated_at",)
+
+
 class HeroSlideSerializer(serializers.ModelSerializer):
     class Meta:
         model = HeroSlide

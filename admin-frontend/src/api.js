@@ -6,7 +6,10 @@ function getCookie(name) {
 }
 
 function errorMessage(data, fallback) {
-  if (typeof data === 'string') return data
+  if (typeof data === 'string') {
+    const message = data.trim()
+    return message.startsWith('<!DOCTYPE') || message.startsWith('<html') ? fallback : message
+  }
   if (data?.detail) return data.detail
   if (data && typeof data === 'object') {
     return Object.entries(data)

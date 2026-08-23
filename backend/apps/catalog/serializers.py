@@ -1,3 +1,5 @@
+import uuid
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
@@ -123,4 +125,8 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "created_at", "updated_at")
+        read_only_fields = ("id", "slug", "legacy_id", "created_at", "updated_at")
+
+    def create(self, validated_data):
+        validated_data["slug"] = f"product-{uuid.uuid4().hex[:16]}"
+        return super().create(validated_data)

@@ -138,42 +138,56 @@ class AdminCatalogApiTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-    def test_staff_user_can_create_category(self):
+    def test_staff_user_can_read_categories_but_cannot_create_them(self):
         self.client.force_authenticate(self.staff)
 
-        response = self.client.post(
+        Category.objects.create(name="护肤", slug="skin-care")
+        list_response = self.client.get(reverse("admin-category-list"))
+
+        create_response = self.client.post(
             reverse("admin-category-list"),
             {"name": "彩妆", "slug": "makeup", "sort_order": 3},
             format="json",
         )
 
-        self.assertEqual(response.status_code, 201)
-        self.assertTrue(Category.objects.filter(slug="makeup").exists())
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(create_response.status_code, 405)
+        self.assertFalse(Category.objects.filter(slug="makeup").exists())
 
-    def test_api_rejects_third_level_category(self):
-        root = Category.objects.create(name="护肤", slug="skin-care")
-        child = Category.objects.create(
-            name="保湿系列", slug="hydrating", parent=root
-        )
+    def test_staff_user_cannot_update_or_delete_category(self):
+        category = Category.objects.create(name="护肤", slug="skin-care")
         self.client.force_authenticate(self.staff)
 
-        response = self.client.post(
-            reverse("admin-category-list"),
-            {"name": "第三级", "slug": "level-three", "parent": child.id},
+        update_response = self.client.patch(
+            reverse("admin-category-detail", kwargs={"pk": category.pk}),
+            {"name": "被修改"},
             format="json",
         )
-
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("parent", response.json())
-
-    def test_category_with_product_is_protected_from_deletion(self):
-        category = Category.objects.create(name="护肤", slug="skin-care")
-        Product.objects.create(category=category, name="测试产品", slug="test-product")
-        self.client.force_authenticate(self.staff)
-
-        response = self.client.delete(
+        delete_response = self.client.delete(
             reverse("admin-category-detail", kwargs={"pk": category.pk})
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(update_response.status_code, 405)
+        self.assertEqual(delete_response.status_code, 405)
         self.assertTrue(Category.objects.filter(pk=category.pk).exists())
+
+    def test_product_slug_and_legacy_id_are_server_managed(self):
+        category = Category.objects.create(name="护肤", slug="skin-care")
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.post(
+            reverse("admin-product-list"),
+            {
+                "category": category.pk,
+                "name": "新产品",
+                "slug": "customer-supplied-slug",
+                "legacy_id": 999,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        product = Product.objects.get(pk=response.json()["id"])
+        self.assertTrue(product.slug.startswith("product-"))
+        self.assertNotEqual(product.slug, "customer-supplied-slug")
+        self.assertIsNone(product.legacy_id)

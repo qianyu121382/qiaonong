@@ -66,7 +66,7 @@ th { color: #75827d; font-weight: 500; }
 .row-actions { display: flex; justify-content: flex-end; gap: 14px; }
 .status { display: inline-flex; border-radius: 99px; padding: 4px 9px; color: #17613f; background: #e8f6ee; font-size: 12px; }
 .status.off { color: #6f7773; background: #edf0ee; }
-.dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .dashboard-card { padding: 30px; border: 1px solid #dfe6e1; border-radius: 12px; background: #fff; text-decoration: none; transition: transform .2s, box-shadow .2s; }
 .dashboard-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgb(31 54 46 / 8%); }
 .dashboard-card span { color: #a8844f; font-family: Georgia, serif; font-size: 13px; }
