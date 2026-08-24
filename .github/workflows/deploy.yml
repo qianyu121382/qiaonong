@@ -7,6 +7,10 @@ on:
         description: Full 40-character commit SHA that already passed Checks
         required: true
         type: string
+  workflow_run:
+    workflows: [Checks]
+    types: [completed]
+    branches: [main]
 
 permissions:
   actions: read
@@ -19,13 +23,19 @@ concurrency:
 jobs:
   deploy:
     name: Deploy Qiaonong
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment:
       name: qiaonong-production
       url: https://zgqnht.com/
     env:
-      TARGET_SHA: ${{ inputs.commit_sha }}
+      TARGET_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.commit_sha }}
     steps:
       - name: Checkout trusted main workflow
         uses: actions/checkout@v5

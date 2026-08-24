@@ -4,7 +4,7 @@
 
 ## 1. 当前状态
 
-巧侬安全 CD 已完成仓库实现、服务器安装和首次真实生产部署。生产环境当前运行提交为 `601589d475d3c4e9e6c273133c17c6f81eb31083`，对应的精确 SHA push Checks 和手动 Deploy production 均已成功。
+巧侬安全 CD 已完成仓库实现、服务器安装和首次真实生产部署。首次验收提交为 `601589d475d3c4e9e6c273133c17c6f81eb31083`，对应的精确 SHA push Checks 和 Deploy production 均已成功。生产环境当前提交以服务器 `/srv/qiaonong/app` 的 `HEAD` 和最近一次成功的 Deploy production 记录为准。
 
 2026-08-25 已完成：
 
@@ -16,7 +16,7 @@
 - 通过首次真实 CD、部署后幂等检查、Gunicorn Socket、正式证书本机 HTTPS 与 GitHub Runner 公网检查；
 - 生成安装前完整快照和首次 CD 自动快照，数据库压缩备份与前端快照均已校验。
 
-成功的首次生产部署工作流为 GitHub Actions run `32751668015`。普通业务提交不会自动部署。
+成功的首次生产部署工作流为 GitHub Actions run `32751668015`。此后 `main` 的 push Checks 全部成功时，将自动部署该次 Checks 对应的精确提交；Checks 失败、取消或来自 pull request 时不会部署。保留 `workflow_dispatch`，用于对已经通过 main push Checks 的明确 SHA 执行人工重试或幂等健康检查。
 
 2026-08-24 只读核对的生产现状：
 
@@ -79,12 +79,17 @@ QIAONONG_SSH_PRIVATE_KEY
 QIAONONG_SSH_KNOWN_HOSTS
 ```
 
-工作流第一版仅支持 `workflow_dispatch`，并执行：
+工作流支持以下两种入口：
+
+- 自动入口：监听 `Checks` 的 `workflow_run: completed`，仅接受结论为 `success`、事件为 `push`、分支为 `main` 且来源为当前仓库的运行，并使用该运行的完整 `head_sha`；
+- 手动入口：保留 `workflow_dispatch`，要求输入完整、小写的 40 位 SHA。
+
+两种入口随后统一执行：
 
 1. 校验完整、小写的 40 位 SHA；
 2. 验证目标提交属于 `origin/main`；
 3. 查询 `checks.yml`，要求精确 SHA 存在成功的 main push CI；
-4. 通过 `qiaonong-production` 审批和独立并发组；
+4. 通过 `qiaonong-production` Environment 和独立并发组；如 Environment 配置了人工审批，自动部署会等待审批而不是绕过审批；
 5. 由 `QIAONONG_SSH_USER=qiaonong-cd` 使用严格 Host Key 校验的巧侬专用 SSH Key 发送 `deploy <SHA>`；
 6. 部署后从 Runner 运行公开站检查；
 7. 无论成功或失败都删除 Runner 临时 SSH 文件。
@@ -216,7 +221,7 @@ curl --resolve zgqnht.com:443:127.0.0.1 https://zgqnht.com/manage/
 - 服务、Socket、两个公开 `dist`、正式 HTTPS、生产 Git SHA 和独立 CD Key 均已复核；
 - GitHub Runner 的首页、管理入口、健康接口、公开分类和网站设置检查全部返回成功。
 
-后续生产部署继续由 `workflow_dispatch` 手工输入已通过精确 SHA push Checks 的提交。媒体定期备份、备份保留策略、自动清理和异机备份仍是独立后续任务，不得通过放宽当前安全边界实现。
+后续生产部署默认由成功的 `main` push Checks 自动触发，并部署该次运行的精确 SHA；`workflow_dispatch` 继续作为明确 SHA 的人工重试入口。媒体定期备份、备份保留策略、自动清理和异机备份仍是独立后续任务，不得通过放宽当前安全边界实现。
 
 ## 10. CI/CD 冻结范围
 
@@ -226,4 +231,4 @@ curl --resolve zgqnht.com:443:127.0.0.1 https://zgqnht.com/manage/
 - `deploy/`；
 - 本文及服务器权限设计。
 
-后续普通业务开发不得修改这些内容。只有用户明确要求，或验证发现会阻断安全部署的实际缺陷时，才重新解冻并走完整审核、测试和 CI。
+后续普通业务开发不得修改这些内容。本次因用户明确要求启用自动 CD 而临时解冻；完成自动部署验证后重新冻结。此后只有用户明确要求，或验证发现会阻断安全部署的实际缺陷时，才重新解冻并走完整审核、测试和 CI。
