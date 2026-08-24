@@ -17,6 +17,7 @@ const routeBreadcrumbs = computed(() => {
     return [{ title: '首页', path: '/' }]
   }
   const map = {
+    categories: { parent: '业务管理', title: '产品分类' },
     products: { parent: '业务管理', title: '产品管理' },
     carousel: { parent: '内容管理', title: '首页轮播' },
     company: { parent: '系统设置', title: '公司信息' },
@@ -83,6 +84,11 @@ watch(
         <router-link to="/products" class="ry-menu-item" title="产品管理">
           <AdminIcon name="products" class="ry-menu-icon" :size="16" />
           <span v-if="!isCollapse">产品管理</span>
+        </router-link>
+
+        <router-link to="/categories" class="ry-menu-item" title="产品分类">
+          <AdminIcon name="categories" class="ry-menu-icon" :size="16" />
+          <span v-if="!isCollapse">产品分类</span>
         </router-link>
 
         <router-link to="/carousel" class="ry-menu-item" title="首页轮播">

@@ -8,6 +8,7 @@ export const tagsViewState = reactive({
 
 const routeTitleMap = {
   dashboard: '工作台',
+  categories: '产品分类',
   products: '产品管理',
   carousel: '首页轮播',
   company: '公司信息',

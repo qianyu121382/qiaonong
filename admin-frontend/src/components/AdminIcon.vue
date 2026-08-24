@@ -39,6 +39,13 @@ defineProps({
       <path d="M12 22V12" />
     </template>
 
+    <!-- Categories / Folder tree -->
+    <template v-else-if="name === 'categories' || name === 'folder'">
+      <path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+      <path d="M8 11h8" />
+      <path d="M8 15h5" />
+    </template>
+
     <!-- Carousel / Slides / Image -->
     <template v-else-if="name === 'carousel' || name === 'image' || name === 'gallery'">
       <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
@@ -218,6 +225,44 @@ defineProps({
     <template v-else-if="name === 'map-pin'">
       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
       <circle cx="12" cy="10" r="3" />
+    </template>
+
+    <!-- Grid / Cards -->
+    <template v-else-if="name === 'grid'">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+    </template>
+
+    <!-- List -->
+    <template v-else-if="name === 'list'">
+      <line x1="8" y1="6" x2="21" y2="6" />
+      <line x1="8" y1="12" x2="21" y2="12" />
+      <line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" />
+      <line x1="3" y1="12" x2="3.01" y2="12" />
+      <line x1="3" y1="18" x2="3.01" y2="18" />
+    </template>
+
+    <!-- Layers -->
+    <template v-else-if="name === 'layers'">
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </template>
+
+    <!-- Eye / Preview -->
+    <template v-else-if="name === 'eye'">
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </template>
+
+    <!-- Folder Plus -->
+    <template v-else-if="name === 'folder-plus'">
+      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+      <line x1="12" y1="10" x2="12" y2="16" />
+      <line x1="9" y1="13" x2="15" y2="13" />
     </template>
 
     <!-- Default fallback -->

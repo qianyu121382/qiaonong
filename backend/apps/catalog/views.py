@@ -1,6 +1,6 @@
-from django.db.models import Q
+from django.db.models import ProtectedError, Q
 from rest_framework import viewsets
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import AllowAny, IsAdminUser
 
 from .models import Category, Product, ProductImage
@@ -76,10 +76,21 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset.order_by("sort_order", "id")
 
 
-class AdminCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+class AdminCategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
     serializer_class = AdminCategorySerializer
     queryset = Category.objects.select_related("parent").all()
+
+    def perform_destroy(self, instance):
+        if instance.children.exists():
+            raise ValidationError({"detail": "该分类存在下级分类，请先处理下级分类。"})
+        if instance.products.exists():
+            raise ValidationError({"detail": "该分类仍有关联产品，请先调整产品分类或停用该分类。"})
+        try:
+            instance.delete()
+        except ProtectedError as error:
+            raise ValidationError({"detail": "该分类仍被其他数据使用，暂时不能删除。"}) from error
+
 
 class AdminProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
