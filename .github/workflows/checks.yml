@@ -1,11 +1,43 @@
 name: Checks
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
   pull_request:
 
 jobs:
+  deployment-templates:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - run: bash -n deploy/qiaonong-cd-dispatch
+      - run: bash -n deploy/qiaonong-cd-entrypoint
+      - run: python -m py_compile deploy/qiaonong-cd-backup.py
+      - name: Validate service security template
+        shell: bash
+        run: |
+          grep -Fxq 'User=qiaonong' deploy/qiaonong.service
+          grep -Fxq 'Group=www-data' deploy/qiaonong.service
+          grep -Fxq 'UMask=0027' deploy/qiaonong.service
+          grep -Fxq 'NoNewPrivileges=true' deploy/qiaonong.service
+      - name: Reject unrestricted SSH commands
+        shell: bash
+        run: |
+          set +e
+          SSH_ORIGINAL_COMMAND=shell bash deploy/qiaonong-cd-dispatch
+          status=$?
+          set -e
+          [[ "$status" -eq 64 ]]
+
+          set +e
+          SSH_ORIGINAL_COMMAND='deploy 0123456789abcdef0123456789abcdef01234567' bash deploy/qiaonong-cd-dispatch
+          status=$?
+          set -e
+          [[ "$status" -eq 69 ]]
+
   frontend:
     runs-on: ubuntu-latest
     strategy:

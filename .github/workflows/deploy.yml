@@ -1,0 +1,120 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Full 40-character commit SHA that already passed Checks
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: qiaonong-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Qiaonong
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: qiaonong-production
+      url: https://zgqnht.com/
+    env:
+      TARGET_SHA: ${{ inputs.commit_sha }}
+    steps:
+      - name: Checkout trusted main workflow
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Validate target commit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          [[ "${TARGET_SHA}" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "commit_sha must be a full lowercase 40-character Git SHA."
+            exit 1
+          }
+
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          git cat-file -e "${TARGET_SHA}^{commit}"
+          git merge-base --is-ancestor "${TARGET_SHA}" origin/main || {
+            echo "The requested commit is not part of origin/main."
+            exit 1
+          }
+
+      - name: Require successful Checks for target commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          successful_runs="$(
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/checks.yml/runs?head_sha=${TARGET_SHA}&status=completed&per_page=100" \
+              --jq '[.workflow_runs[] | select(.conclusion == "success" and .event == "push" and .head_branch == "main")] | length'
+          )"
+
+          [[ "${successful_runs}" -ge 1 ]] || {
+            echo "No successful main-branch Checks run exists for ${TARGET_SHA}."
+            exit 1
+          }
+
+      - name: Configure restricted SSH connection
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.QIAONONG_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.QIAONONG_SSH_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${SSH_PRIVATE_KEY:?QIAONONG_SSH_PRIVATE_KEY is required}"
+          : "${SSH_KNOWN_HOSTS:?QIAONONG_SSH_KNOWN_HOSTS is required}"
+          install -d -m 700 "${RUNNER_TEMP}/qiaonong-ssh"
+          printf '%s\n' "${SSH_PRIVATE_KEY}" >"${RUNNER_TEMP}/qiaonong-ssh/id_ed25519"
+          printf '%s\n' "${SSH_KNOWN_HOSTS}" >"${RUNNER_TEMP}/qiaonong-ssh/known_hosts"
+          chmod 600 \
+            "${RUNNER_TEMP}/qiaonong-ssh/id_ed25519" \
+            "${RUNNER_TEMP}/qiaonong-ssh/known_hosts"
+
+      - name: Deploy verified commit
+        env:
+          SSH_HOST: ${{ secrets.QIAONONG_SSH_HOST }}
+          SSH_USER: ${{ secrets.QIAONONG_SSH_USER }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${SSH_HOST:?QIAONONG_SSH_HOST is required}"
+          : "${SSH_USER:?QIAONONG_SSH_USER is required}"
+
+          ssh \
+            -F /dev/null \
+            -i "${RUNNER_TEMP}/qiaonong-ssh/id_ed25519" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="${RUNNER_TEMP}/qiaonong-ssh/known_hosts" \
+            -o ConnectTimeout=15 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=3 \
+            -- "${SSH_USER}@${SSH_HOST}" \
+            "deploy ${TARGET_SHA}"
+
+      - name: Verify public deployment from runner
+        run: python scripts/check_deployment.py https://zgqnht.com
+
+      - name: Remove temporary SSH files
+        if: always()
+        shell: bash
+        run: |
+          rm -f -- \
+            "${RUNNER_TEMP}/qiaonong-ssh/id_ed25519" \
+            "${RUNNER_TEMP}/qiaonong-ssh/known_hosts"
+          rmdir -- "${RUNNER_TEMP}/qiaonong-ssh" 2>/dev/null || true

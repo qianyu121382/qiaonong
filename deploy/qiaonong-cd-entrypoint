@@ -1,0 +1,439 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+umask 027
+
+readonly PROJECT_ROOT=/srv/qiaonong
+readonly APP_ROOT=/srv/qiaonong/app
+readonly BACKEND_ROOT=/srv/qiaonong/app/backend
+readonly FRONTEND_ROOT=/srv/qiaonong/app/frontend
+readonly ADMIN_FRONTEND_ROOT=/srv/qiaonong/app/admin-frontend
+readonly VENV_ROOT=/srv/qiaonong/venv
+readonly MEDIA_ROOT=/srv/qiaonong/media
+readonly STATIC_ROOT=/srv/qiaonong/static
+readonly LOG_ROOT=/srv/qiaonong/logs
+readonly BACKUP_ROOT=/srv/qiaonong/backups
+readonly ENV_FILE=/srv/qiaonong/app/backend/.env
+readonly BACKUP_HELPER=/usr/local/sbin/qiaonong-cd-backup
+readonly SERVICE_UNIT=/etc/systemd/system/qiaonong.service
+readonly SERVICE_NAME=qiaonong.service
+readonly GUNICORN_SOCKET=/run/qiaonong/gunicorn.sock
+readonly RUN_USER=qiaonong
+readonly RUN_GROUP=www-data
+readonly RUN_HOME=/srv/qiaonong
+readonly NPM_CACHE=/srv/qiaonong/logs/npm-cache
+readonly NPM_BIN=/usr/local/bin/npm
+readonly EXPECTED_ORIGIN=https://github.com/qianyu121382/qiaonong.git
+readonly SHARED_DEPLOY_LOCK=/run/lock/company-sites-cd.lock
+readonly PROJECT_DEPLOY_LOCK=/run/lock/qiaonong-cd.lock
+readonly NGINX_SITE_ENABLED=/etc/nginx/sites-enabled/qiaonong
+readonly NGINX_SITE_AVAILABLE=/etc/nginx/sites-available/qiaonong
+readonly HEALTH_URL=http://localhost/api/health/
+readonly PUBLIC_URL=https://zgqnht.com/
+readonly ADMIN_URL=https://zgqnht.com/manage/
+readonly LOCAL_HTTPS_RESOLVE=zgqnht.com:443:127.0.0.1
+
+target_sha="${1:-}"
+previous_sha=""
+snapshot_dir=""
+database_backup=""
+current_stage="初始化"
+code_updated=0
+migrations_attempted=0
+
+log() {
+  printf '[%s] [qiaonong-cd] %s\n' "$(date '+%Y-%m-%d %H:%M:%S %z')" "$*"
+}
+
+die() {
+  log "ERROR（阶段：$current_stage）：$*" >&2
+  exit 1
+}
+
+require_command() {
+  [[ -x "$1" ]] || die "缺少命令：$1"
+}
+
+run_as_qiaonong() {
+  /usr/sbin/runuser -u "$RUN_USER" -g "$RUN_GROUP" -- /usr/bin/env -i \
+    HOME="$RUN_HOME" \
+    USER="$RUN_USER" \
+    LOGNAME="$RUN_USER" \
+    LANG=C.UTF-8 \
+    PATH=/usr/local/bin:/usr/bin:/bin \
+    NPM_CONFIG_CACHE="$NPM_CACHE" \
+    "$@"
+}
+
+git_qiaonong() {
+  run_as_qiaonong /usr/bin/git -C "$APP_ROOT" "$@"
+}
+
+run_manage() {
+  run_as_qiaonong /usr/bin/env \
+    DJANGO_SETTINGS_MODULE=config.settings.production \
+    "$VENV_ROOT/bin/python" "$BACKEND_ROOT/manage.py" "$@"
+}
+
+install_requirements() {
+  run_as_qiaonong "$VENV_ROOT/bin/python" -m pip install \
+    --disable-pip-version-check \
+    -r "$BACKEND_ROOT/requirements/prod.txt"
+}
+
+build_frontend() {
+  local project_root="$1"
+  run_as_qiaonong "$NPM_BIN" --prefix "$project_root" ci --no-audit --no-fund
+  run_as_qiaonong "$NPM_BIN" --prefix "$project_root" run build
+}
+
+require_real_directory() {
+  local path="$1"
+  [[ -d "$path" && ! -L "$path" ]] || die "目录不存在或是符号链接：$path"
+  [[ "$(/usr/bin/realpath -e "$path")" == "$path" ]] || die "目录解析结果异常：$path"
+}
+
+require_public_dist() {
+  local path="$1"
+  require_real_directory "$path"
+  [[ -f "$path/index.html" && ! -L "$path/index.html" ]] || die "公开构建缺少安全的 index.html：$path"
+  [[ "$(/usr/bin/stat -c '%U' "$path")" == "$RUN_USER" ]] || die "公开构建目录所有者异常：$path"
+  if [[ -n "$(/usr/bin/find "$path" -type l -print -quit)" ]]; then
+    die "公开构建目录包含符号链接：$path"
+  fi
+  if [[ -n "$(/usr/bin/find "$path" -type f -links +1 -print -quit)" ]]; then
+    die "公开构建目录包含硬链接文件：$path"
+  fi
+}
+
+publish_dist_permissions() {
+  local path="$1"
+  require_public_dist "$path"
+  /usr/bin/chmod -R a+rX -- "$path"
+}
+
+require_snapshot_dist() {
+  local path="$1"
+  require_real_directory "$path"
+  [[ "$path" == "$snapshot_dir/frontend-dist" || "$path" == "$snapshot_dir/admin-frontend-dist" ]] \
+    || die "拒绝异常的构建快照路径：$path"
+  [[ -f "$path/index.html" && ! -L "$path/index.html" ]] || die "构建快照不完整：$path"
+  [[ "$(/usr/bin/stat -c '%u:%g' "$path")" == "0:0" ]] || die "构建快照必须属于 root：$path"
+  if [[ -n "$(/usr/bin/find "$path" -type l -print -quit)" ]]; then
+    die "构建快照包含符号链接：$path"
+  fi
+  if [[ -n "$(/usr/bin/find "$path" -type f -links +1 -print -quit)" ]]; then
+    die "构建快照包含硬链接文件：$path"
+  fi
+}
+
+health_checks() {
+  /usr/bin/systemctl is-active --quiet "$SERVICE_NAME"
+  [[ -S "$GUNICORN_SOCKET" ]] || die "巧侬 Gunicorn Socket 不存在。"
+  /usr/bin/curl --fail --silent --show-error \
+    --retry 5 \
+    --retry-delay 2 \
+    --retry-connrefused \
+    --unix-socket "$GUNICORN_SOCKET" \
+    --header 'Host: zgqnht.com' \
+    --header 'X-Forwarded-Proto: https' \
+    "$HEALTH_URL" >/dev/null
+  /usr/bin/curl --fail --silent --show-error \
+    --retry 3 \
+    --retry-delay 2 \
+    --resolve "$LOCAL_HTTPS_RESOLVE" \
+    "$PUBLIC_URL" >/dev/null
+  /usr/bin/curl --fail --silent --show-error \
+    --retry 3 \
+    --retry-delay 2 \
+    --resolve "$LOCAL_HTTPS_RESOLVE" \
+    "$ADMIN_URL" >/dev/null
+}
+
+restore_dist() {
+  local name="$1"
+  local source
+  local target
+
+  case "$name" in
+    frontend)
+      source="$snapshot_dir/frontend-dist"
+      target="$FRONTEND_ROOT/dist"
+      ;;
+    admin-frontend)
+      source="$snapshot_dir/admin-frontend-dist"
+      target="$ADMIN_FRONTEND_ROOT/dist"
+      ;;
+    *)
+      log "拒绝恢复未知构建目录：$name"
+      return 1
+      ;;
+  esac
+
+  (require_real_directory "$snapshot_dir") || return 1
+  (require_snapshot_dist "$source") || return 1
+  (require_real_directory "$(/usr/bin/dirname "$target")") || return 1
+  /usr/bin/rm -rf -- "$target"
+  /usr/bin/cp -a -- "$source" "$target"
+  /usr/bin/chown -R "$RUN_USER:$RUN_GROUP" "$target"
+  (publish_dist_permissions "$target") || return 1
+}
+
+rollback_before_migrations() {
+  local rollback_failed=0
+
+  if [[ "$code_updated" -ne 1 || -z "$previous_sha" ]]; then
+    return
+  fi
+
+  log "数据库迁移尚未开始，恢复上一提交 $previous_sha"
+  git_qiaonong checkout --detach "$previous_sha" || rollback_failed=1
+  restore_dist frontend || rollback_failed=1
+  restore_dist admin-frontend || rollback_failed=1
+  install_requirements || rollback_failed=1
+  run_manage collectstatic --noinput || rollback_failed=1
+  /usr/sbin/nginx -t || rollback_failed=1
+  /usr/bin/systemctl restart "$SERVICE_NAME" || rollback_failed=1
+  /usr/bin/systemctl is-active --quiet "$SERVICE_NAME" || rollback_failed=1
+  (health_checks) || rollback_failed=1
+
+  if [[ "$rollback_failed" -eq 0 ]]; then
+    log "应用文件、前端构建和服务已恢复到 $previous_sha"
+  else
+    log "自动恢复未完全成功，需要人工处理。快照：${snapshot_dir:-未创建}"
+  fi
+}
+
+handle_exit() {
+  local exit_code=$?
+  trap - EXIT INT TERM
+
+  if [[ "$exit_code" -eq 0 ]]; then
+    return
+  fi
+
+  set +e
+  log "部署在 $current_stage 阶段失败。"
+  if [[ "$migrations_attempted" -eq 0 ]]; then
+    rollback_before_migrations
+  else
+    log "数据库迁移已经开始。"
+    log "不自动反向迁移，也不盲目恢复旧代码；请人工评估数据库与应用兼容性。"
+    log "部署前数据库备份：${database_backup:-未创建}"
+    log "部署前前端快照：${snapshot_dir:-未创建}"
+  fi
+  log "部署失败，目标提交：$target_sha"
+  exit "$exit_code"
+}
+
+trap handle_exit EXIT
+trap 'exit 130' INT TERM
+
+[[ "$EUID" -eq 0 ]] || die "固定部署入口必须由 root 执行。"
+[[ "$#" -eq 1 && "$target_sha" =~ ^[0-9a-f]{40}$ ]] \
+  || die "参数必须是完整的 40 位小写 Git SHA。"
+
+for command_path in \
+  /usr/bin/chmod \
+  /usr/bin/chown \
+  /usr/bin/cp \
+  /usr/bin/curl \
+  /usr/bin/cut \
+  /usr/bin/date \
+  /usr/bin/find \
+  /usr/bin/flock \
+  /usr/bin/git \
+  /usr/bin/getent \
+  /usr/bin/gzip \
+  /usr/bin/id \
+  /usr/bin/install \
+  /usr/bin/mkdir \
+  "$NPM_BIN" \
+  /usr/bin/dirname \
+  /usr/bin/realpath \
+  /usr/bin/readlink \
+  /usr/bin/rm \
+  /usr/bin/sleep \
+  /usr/bin/stat \
+  /usr/bin/sudo \
+  /usr/bin/systemctl \
+  /usr/bin/test \
+  /usr/sbin/nginx \
+  /usr/sbin/runuser; do
+  require_command "$command_path"
+done
+
+for directory in \
+  "$PROJECT_ROOT" \
+  "$APP_ROOT" \
+  "$BACKEND_ROOT" \
+  "$FRONTEND_ROOT" \
+  "$ADMIN_FRONTEND_ROOT" \
+  "$VENV_ROOT" \
+  "$MEDIA_ROOT" \
+  "$STATIC_ROOT" \
+  "$LOG_ROOT" \
+  "$BACKUP_ROOT"; do
+  require_real_directory "$directory"
+done
+
+[[ -d "$APP_ROOT/.git" ]] || die "巧侬应用目录不是 Git 工作区。"
+[[ -x "$VENV_ROOT/bin/python" ]] || die "巧侬 Python 虚拟环境不可用。"
+[[ -f "$ENV_FILE" && ! -L "$ENV_FILE" ]] || die "巧侬生产 .env 不存在或是符号链接。"
+[[ -x "$BACKUP_HELPER" && ! -L "$BACKUP_HELPER" ]] || die "固定备份助手未安装或是符号链接：$BACKUP_HELPER"
+[[ "$(/usr/bin/stat -c '%u' "$BACKUP_HELPER")" == 0 ]] || die "固定备份助手必须属于 root。"
+[[ $((8#$(/usr/bin/stat -c '%a' "$BACKUP_HELPER") & 8#022)) -eq 0 ]] \
+  || die "固定备份助手不能被组或其他用户写入。"
+[[ -f "$SERVICE_UNIT" && ! -L "$SERVICE_UNIT" ]] || die "服务文件位置不符合预期：$SERVICE_UNIT"
+[[ "$(/usr/bin/stat -c '%u' "$SERVICE_UNIT")" == 0 ]] || die "qiaonong.service 必须属于 root。"
+[[ $((8#$(/usr/bin/stat -c '%a' "$SERVICE_UNIT") & 8#022)) -eq 0 ]] \
+  || die "qiaonong.service 不能被组或其他用户写入。"
+[[ -L "$NGINX_SITE_ENABLED" ]] || die "巧侬 Nginx 启用配置必须是受控符号链接。"
+[[ "$(/usr/bin/readlink -f "$NGINX_SITE_ENABLED")" == "$NGINX_SITE_AVAILABLE" ]] \
+  || die "巧侬 Nginx 启用配置指向异常。"
+[[ -f "$NGINX_SITE_AVAILABLE" && ! -L "$NGINX_SITE_AVAILABLE" ]] \
+  || die "巧侬 Nginx 站点配置位置异常：$NGINX_SITE_AVAILABLE"
+[[ "$(/usr/bin/stat -c '%u' "$NGINX_SITE_AVAILABLE")" == 0 ]] \
+  || die "巧侬 Nginx 配置必须属于 root。"
+[[ $((8#$(/usr/bin/stat -c '%a' "$NGINX_SITE_AVAILABLE") & 8#022)) -eq 0 ]] \
+  || die "巧侬 Nginx 配置不能被组或其他用户写入。"
+
+[[ "$(/usr/bin/stat -c '%U:%G' "$APP_ROOT")" == "$RUN_USER:$RUN_GROUP" ]] \
+  || die "巧侬应用目录必须属于 $RUN_USER:$RUN_GROUP。"
+[[ "$(/usr/bin/stat -c '%U:%G' "$VENV_ROOT")" == "$RUN_USER:$RUN_GROUP" ]] \
+  || die "巧侬虚拟环境必须先调整为 $RUN_USER:$RUN_GROUP。"
+[[ "$(/usr/bin/stat -c '%U:%G' "$LOG_ROOT")" == "$RUN_USER:$RUN_GROUP" ]] \
+  || die "巧侬日志目录所有者异常。"
+[[ "$(/usr/bin/stat -c '%u:%g' "$BACKUP_ROOT")" == "0:0" ]] \
+  || die "巧侬备份目录必须属于 root:root。"
+[[ $((8#$(/usr/bin/stat -c '%a' "$BACKUP_ROOT") & 8#077)) -eq 0 ]] \
+  || die "巧侬备份目录不能向组或其他用户开放。"
+[[ "$(/usr/bin/id -gn "$RUN_USER")" == "$RUN_GROUP" ]] \
+  || die "巧侬项目用户的主组不是 $RUN_GROUP。"
+[[ "$(/usr/bin/getent passwd "$RUN_USER" | /usr/bin/cut -d: -f7)" == /usr/sbin/nologin ]] \
+  || die "巧侬项目用户必须保持不可登录。"
+if run_as_qiaonong /usr/bin/sudo -n -l >/dev/null 2>&1; then
+  die "巧侬项目用户不能拥有 sudo 权限。"
+fi
+run_as_qiaonong /usr/bin/test -r "$ENV_FILE" || die "巧侬项目用户无法读取生产 .env。"
+run_as_qiaonong /usr/bin/test -w "$VENV_ROOT" || die "巧侬项目用户无法写入独立虚拟环境。"
+[[ "$(git_qiaonong remote get-url origin)" == "$EXPECTED_ORIGIN" ]] \
+  || die "origin 不是预期的巧侬仓库。"
+
+[[ ! -L "$SHARED_DEPLOY_LOCK" ]] || die "共享部署锁不能是符号链接。"
+exec 9>"$SHARED_DEPLOY_LOCK"
+/usr/bin/flock -n 9 || die "同机另一个站点正在部署，请稍后重试。"
+[[ ! -L "$PROJECT_DEPLOY_LOCK" ]] || die "巧侬部署锁不能是符号链接。"
+exec 8>"$PROJECT_DEPLOY_LOCK"
+/usr/bin/flock -n 8 || die "另一个巧侬部署正在运行，请稍后重试。"
+
+run_as_qiaonong /usr/bin/mkdir -p -- "$NPM_CACHE"
+
+previous_sha="$(git_qiaonong rev-parse HEAD)"
+[[ "$previous_sha" =~ ^[0-9a-f]{40}$ ]] || die "无法读取当前巧侬提交。"
+[[ -z "$(git_qiaonong branch --show-current)" ]] || die "巧侬生产仓库必须保持 detached HEAD。"
+[[ -z "$(git_qiaonong status --porcelain --untracked-files=normal)" ]] \
+  || die "服务器巧侬工作区不干净，拒绝覆盖。"
+
+current_stage="读取远端仓库"
+log "读取巧侬 origin/main"
+fetch_ok=0
+for attempt in 1 2 3; do
+  if git_qiaonong fetch --no-tags --prune origin +refs/heads/main:refs/remotes/origin/main; then
+    fetch_ok=1
+    break
+  fi
+  log "第 $attempt 次读取失败。"
+  if [[ "$attempt" -lt 3 ]]; then
+    /usr/bin/sleep $((attempt * 3))
+  fi
+done
+[[ "$fetch_ok" -eq 1 ]] || die "连续三次无法读取巧侬远端仓库。"
+
+git_qiaonong cat-file -e "${target_sha}^{commit}"
+git_qiaonong merge-base --is-ancestor "$target_sha" refs/remotes/origin/main \
+  || die "目标提交不属于巧侬 origin/main。"
+git_qiaonong merge-base --is-ancestor "$previous_sha" "$target_sha" \
+  || die "目标提交不是从当前线上版本 fast-forward。"
+
+if [[ "$previous_sha" == "$target_sha" ]]; then
+  current_stage="幂等健康检查"
+  log "目标提交已经部署，只执行完整健康检查。"
+  /usr/sbin/nginx -t
+  health_checks
+  log "当前巧侬版本健康：$target_sha"
+  trap - EXIT INT TERM
+  exit 0
+fi
+
+require_public_dist "$FRONTEND_ROOT/dist"
+require_public_dist "$ADMIN_FRONTEND_ROOT/dist"
+
+current_stage="部署前快照"
+log "创建巧侬数据库与旧前端构建快照"
+readonly timestamp="$(date -u '+%Y%m%dT%H%M%SZ')"
+snapshot_dir="$BACKUP_ROOT/deploy-$timestamp-${previous_sha:0:12}"
+[[ ! -e "$snapshot_dir" && ! -L "$snapshot_dir" ]] || die "部署快照目录已存在：$snapshot_dir"
+/usr/bin/install -d -o root -g root -m 0700 "$snapshot_dir"
+require_real_directory "$snapshot_dir"
+/usr/bin/cp -a -- "$FRONTEND_ROOT/dist" "$snapshot_dir/frontend-dist"
+/usr/bin/cp -a -- "$ADMIN_FRONTEND_ROOT/dist" "$snapshot_dir/admin-frontend-dist"
+/usr/bin/chown -R root:root "$snapshot_dir/frontend-dist" "$snapshot_dir/admin-frontend-dist"
+require_snapshot_dist "$snapshot_dir/frontend-dist"
+require_snapshot_dist "$snapshot_dir/admin-frontend-dist"
+database_backup="$snapshot_dir/database-before-deploy.sql.gz"
+run_as_qiaonong "$VENV_ROOT/bin/python" "$BACKUP_HELPER" | /usr/bin/gzip -9 >"$database_backup"
+/usr/bin/chmod 0600 "$database_backup"
+[[ -s "$database_backup" ]] || die "巧侬数据库备份为空。"
+/usr/bin/gzip -t "$database_backup"
+log "部署前快照完成：$snapshot_dir"
+
+current_stage="检出目标提交"
+log "检出目标提交 $target_sha"
+code_updated=1
+git_qiaonong checkout --detach "$target_sha"
+
+current_stage="安装生产依赖"
+log "安装巧侬生产依赖"
+install_requirements
+
+current_stage="构建官网前端"
+log "构建巧侬公开前端"
+build_frontend "$FRONTEND_ROOT"
+publish_dist_permissions "$FRONTEND_ROOT/dist"
+
+current_stage="构建管理后台前端"
+log "构建巧侬管理前端"
+build_frontend "$ADMIN_FRONTEND_ROOT"
+publish_dist_permissions "$ADMIN_FRONTEND_ROOT/dist"
+
+current_stage="Django 迁移前检查"
+log "执行 Django 生产与迁移一致性检查"
+run_manage makemigrations --check --dry-run
+run_manage check --deploy
+
+migrations_attempted=1
+current_stage="数据库迁移"
+log "执行巧侬数据库迁移"
+run_manage migrate --noinput
+current_stage="收集静态文件"
+log "收集巧侬静态文件"
+run_manage collectstatic --noinput
+
+current_stage="Nginx 配置检查与服务重启"
+log "检查 Nginx 并重启 qiaonong.service"
+/usr/sbin/nginx -t
+/usr/bin/systemctl restart "$SERVICE_NAME"
+/usr/bin/systemctl is-active --quiet "$SERVICE_NAME"
+
+current_stage="部署后健康检查"
+log "执行 Gunicorn Socket 与本机正式 HTTPS 检查"
+health_checks
+current_stage="最终 Git SHA 核对"
+[[ "$(git_qiaonong rev-parse HEAD)" == "$target_sha" ]] \
+  || die "服务器提交与目标提交不一致。"
+
+trap - EXIT INT TERM
+log "部署成功：$previous_sha -> $target_sha；快照：$snapshot_dir"

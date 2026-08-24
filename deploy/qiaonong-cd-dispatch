@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+readonly ENTRYPOINT=/usr/local/sbin/qiaonong-cd-entrypoint
+readonly original_command="${SSH_ORIGINAL_COMMAND:-}"
+
+reject() {
+  printf '拒绝：该密钥只允许执行 deploy <40位小写提交SHA>。\n' >&2
+  exit 64
+}
+
+if [[ ${#original_command} -ne 47 || "${original_command:0:7}" != "deploy " ]]; then
+  reject
+fi
+
+commit_sha="${original_command:7}"
+if [[ ! "$commit_sha" =~ ^[0-9a-f]{40}$ ]]; then
+  reject
+fi
+
+if [[ ! -x "$ENTRYPOINT" || -L "$ENTRYPOINT" ]]; then
+  printf '巧侬 CD 固定入口不可用或不安全。\n' >&2
+  exit 69
+fi
+
+if [[ "$(/usr/bin/stat -c '%u' "$ENTRYPOINT")" != 0 ]]; then
+  printf '巧侬 CD 固定入口不属于 root。\n' >&2
+  exit 69
+fi
+
+if (( (8#$(/usr/bin/stat -c '%a' "$ENTRYPOINT") & 8#022) != 0 )); then
+  printf '巧侬 CD 固定入口存在不安全的写权限。\n' >&2
+  exit 69
+fi
+
+exec /usr/bin/sudo -n "$ENTRYPOINT" "$commit_sha"

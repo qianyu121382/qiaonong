@@ -1,0 +1,5 @@
+.github/workflows/*.yml text eol=lf
+deploy/qiaonong-cd-backup.py text eol=lf
+deploy/qiaonong-cd-dispatch text eol=lf
+deploy/qiaonong-cd-entrypoint text eol=lf
+deploy/qiaonong.service text eol=lf
