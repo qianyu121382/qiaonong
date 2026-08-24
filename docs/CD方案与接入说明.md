@@ -1,10 +1,22 @@
 # 巧侬 CD 方案与接入说明
 
-最后更新：2026-08-24
+最后更新：2026-08-25
 
 ## 1. 当前状态
 
-巧侬已完成安全 CD 的仓库待安装版本。当前先完成仓库验证和 CI，尚未把本版本固定脚本、传输用户、最小 sudoers、共享锁或 service 模板安装到服务器，也不会在本轮触发生产 CD。
+巧侬安全 CD 已完成仓库实现、服务器安装和首次真实生产部署。生产环境当前运行提交为 `601589d475d3c4e9e6c273133c17c6f81eb31083`，对应的精确 SHA push Checks 和手动 Deploy production 均已成功。
+
+2026-08-25 已完成：
+
+- 创建 `qiaonong-production` GitHub Environment，并配置四项 `QIAONONG_` 前缀的独立 SSH Secrets；
+- 安装 `qiaonong-cd` 专属传输账号、forced-command Key、最小 sudoers、root-owned 固定脚本和强化后的 `qiaonong.service`；
+- 将虚拟环境调整为 `qiaonong:www-data`，将 `/srv/qiaonong/backups` 调整为 `root:root 0700`；
+- 验证共享锁与项目锁均为 `root:root 0640`，并按“共享锁 → 项目锁”顺序覆盖完整部署；
+- 通过 Shell、非法 SHA、短 SHA、SCP、SFTP、端口转发和跨项目命令拒绝测试；
+- 通过首次真实 CD、部署后幂等检查、Gunicorn Socket、正式证书本机 HTTPS 与 GitHub Runner 公网检查；
+- 生成安装前完整快照和首次 CD 自动快照，数据库压缩备份与前端快照均已校验。
+
+成功的首次生产部署工作流为 GitHub Actions run `32751668015`。普通业务提交不会自动部署。
 
 2026-08-24 只读核对的生产现状：
 
@@ -136,14 +148,16 @@ curl --resolve zgqnht.com:443:127.0.0.1 https://zgqnht.com/manage/
 - 能写巧侬代码工作区、虚拟环境、npm 缓存、静态文件和媒体，但不能写部署备份目录；
 - 能读取 root 所有、组为 `www-data` 的巧侬生产 `.env`。
 
-统一安装阶段需要至少调整以下巧侬独立资源：
+统一安装阶段已完成以下巧侬独立资源调整：
 
 ```text
 /srv/qiaonong/venv     root:root → qiaonong:www-data
 /srv/qiaonong/backups  旧权限 → root:root，模式 0700
 ```
 
-该变更必须在维护窗口单独复核并执行，不涉及 `/srv/chanquan`。
+该变更已在巧侬独立备份完成后执行并复核，不涉及其他项目资源。
+
+`qiaonong` 运行用户仍使用 `/usr/sbin/nologin`。`qiaonong-cd` 传输用户为满足 OpenSSH 执行 authorized_keys forced command 的机制使用 `/bin/bash`，但账号密码保持锁定，唯一公钥带有 `restrict,command="/usr/local/sbin/qiaonong-cd-dispatch"`；实际测试确认交互 Shell、PTY、SCP/SFTP 和端口转发均不可用。
 
 严格 `umask 027` 继续保护源码和私有文件。只有 `frontend/dist` 与 `admin-frontend/dist` 是公开构建产物，允许补充 `a+rX`；不得放宽 `.env`、媒体、日志或备份权限。
 
@@ -189,24 +203,24 @@ curl --resolve zgqnht.com:443:127.0.0.1 https://zgqnht.com/manage/
 8. 删除临时上传文件；
 9. 重新测试合法 SHA、非法 SHA、Shell、SCP/SFTP、端口转发和跨项目调用均符合预期。
 
-实际安装命令、sudoers 和 `authorized_keys` 内容需要在两项目脚本都通过 CI 后，于统一维护窗口根据服务器实时状态生成。本阶段不提前修改这些共享安全配置。
+首次安装已按上述流程完成。以后若固定脚本发生变化，仍必须重新执行双端语法检查、SHA-256 核对和 root 原子安装；普通 CD 不得更新这些固定副本。
 
-## 9. 启用前剩余步骤
+## 9. 生产启用结果与后续运维
 
-1. 提交并推送巧侬仓库版本，等待全部 Checks 通过；
-2. 与婵泉分别冻结待安装脚本版本并记录提交与 SHA-256；
-3. 统一维护窗口调整各自项目用户和目录权限；
-4. 安装两项目独立固定入口和最小 sudoers；
-5. 安装两把独立 forced-command 公钥；
-6. 完成拒绝行为、当前 SHA 幂等检查和共享锁并发测试；
-7. 创建 `qiaonong-production` 及巧侬独立 Secrets；
-8. 单独执行一次巧侬真实 CD，并核对 SHA、备份、权限、服务、Socket 和 HTTPS。
+首次生产 CD 已完成并验收：
 
-统一维护窗口还需创建密码锁定、不可承载普通 Shell 的 `qiaonong-cd` 传输用户；为它安装仅调用 `/usr/local/sbin/qiaonong-cd-dispatch` 的 forced-command 公钥和最小 sudoers；安装并核对 root-owned 固定脚本；调整巧侬虚拟环境与备份目录权限；安装强化后的 `qiaonong.service` 并执行 `daemon-reload`；最后完成合法 SHA、非法 SHA、Shell、SCP/SFTP、端口转发、跨项目调用、幂等健康检查及共享锁并发测试。整个过程不得读取或修改婵泉资源。
+- 部署前线上提交：`ff59d6ada50f378568186d93728d73923bdd863e`；
+- 首次 CD 目标提交：`601589d475d3c4e9e6c273133c17c6f81eb31083`；
+- 安装前快照：`/srv/qiaonong/backups/pre-cd-install-20260824T162429Z-ff59d6ada50f`；
+- 首次 CD 自动快照：`/srv/qiaonong/backups/deploy-20260824T163515Z-ff59d6ada50f`；
+- 服务、Socket、两个公开 `dist`、正式 HTTPS、生产 Git SHA 和独立 CD Key 均已复核；
+- GitHub Runner 的首页、管理入口、健康接口、公开分类和网站设置检查全部返回成功。
+
+后续生产部署继续由 `workflow_dispatch` 手工输入已通过精确 SHA push Checks 的提交。媒体定期备份、备份保留策略、自动清理和异机备份仍是独立后续任务，不得通过放宽当前安全边界实现。
 
 ## 10. CI/CD 冻结范围
 
-本轮提交通过巧侬 `main` push Checks 后，以下内容作为统一维护窗口的冻结版本：
+首次真实 CD 验收通过后，以下内容作为生产冻结版本：
 
 - `.github/workflows/`；
 - `deploy/`；
