@@ -106,36 +106,56 @@ onBeforeUnmount(() => window.clearInterval(slideTimer))
         <button v-for="(category, index) in siteState.categories" :key="category.id" type="button" role="tab" :class="{ active: index === seriesIndex }" :aria-selected="index === seriesIndex" @click="selectSeries(index)"><small>0{{ index + 1 }}</small>{{ category.name }}</button>
       </div>
       <div v-if="currentSeries" class="series-showcase">
-        <div class="series-backdrop" aria-hidden="true">
-          <template v-if="currentSeries.banner">
-            <img class="series-backdrop-ambient" :src="currentSeries.banner" alt="" />
-            <img class="series-backdrop-artwork" :src="currentSeries.banner" alt="" />
-          </template>
-          <div v-else class="series-placeholder"><span>QIAONONG</span></div>
-        </div>
-        <router-link class="series-visual" :to="`/products/${currentSeries.slug}`">
-          <span class="series-visual-label">探索 {{ currentSeries.name }} <i>→</i></span>
-        </router-link>
-        <div class="series-copy">
-          <div>
-            <p class="eyebrow">SELECTED SERIES</p>
-            <h3>{{ currentSeries.name }}</h3>
-            <p>{{ currentSeries.description || `浏览巧侬${currentSeries.name}已公开的系列与产品资料。` }}</p>
-            <div v-if="currentSeries.children?.length" class="series-children">
-              <router-link v-for="child in currentSeries.children" :key="child.id" :to="`/products/${child.slug}`">{{ child.name }}</router-link>
+        <router-link class="series-banner-stage" :to="`/products/${currentSeries.slug}`" :aria-label="`查看 ${currentSeries.name} 系列全部产品`">
+          <div class="series-banner-viewport">
+            <img v-if="currentSeries.banner" class="series-banner-img" :src="currentSeries.banner" :alt="`${currentSeries.name} 系列横幅`" />
+            <div v-else class="series-placeholder"><span>QIAONONG · {{ currentSeries.name }}</span></div>
+            <div class="series-banner-overlay">
+              <span class="series-banner-action">探索「{{ currentSeries.name }}」系列 <i>→</i></span>
             </div>
           </div>
-          <div class="series-representatives">
-            <p v-if="seriesLoading" class="series-loading">正在加载代表产品…</p>
-            <template v-else>
-              <router-link v-for="product in seriesProducts" :key="product.id" :to="`/product/${product.slug}`">
-                <img v-if="product.cover" :src="product.cover" :alt="product.name" loading="lazy" />
-                <span v-else>QIAONONG</span>
-                <strong>{{ product.name }}</strong>
-              </router-link>
-            </template>
+        </router-link>
+        <div class="series-shelf">
+          <div class="series-meta">
+            <div class="series-meta-header">
+              <p class="eyebrow">SELECTED SERIES · 0{{ seriesIndex + 1 }}</p>
+              <h3>{{ currentSeries.name }}</h3>
+              <p class="series-desc">{{ currentSeries.description || `浏览巧侬${currentSeries.name}已公开的系列与产品资料。` }}</p>
+            </div>
+            <div v-if="currentSeries.children?.length" class="series-taxonomy">
+              <span class="series-taxonomy-label">子系列分类</span>
+              <div class="series-children">
+                <router-link v-for="child in currentSeries.children" :key="child.id" :to="`/products/${child.slug}`">{{ child.name }}</router-link>
+              </div>
+            </div>
+            <router-link class="series-all-btn" :to="`/products/${currentSeries.slug}`">
+              <span>查看全部 {{ currentSeries.name }} 产品</span>
+              <i>→</i>
+            </router-link>
           </div>
-          <router-link class="series-all-link" :to="`/products/${currentSeries.slug}`">查看全部 {{ currentSeries.name }}产品 <span>→</span></router-link>
+          <div class="series-products-panel">
+            <div class="series-products-header">
+              <span class="series-products-title">精选代表单品</span>
+              <span class="series-products-badge">REPRESENTATIVE PRODUCTS</span>
+            </div>
+            <div v-if="seriesLoading" class="series-loading-box">
+              <span class="series-loading-spinner"></span>
+              <span>正在加载代表产品…</span>
+            </div>
+            <div v-else-if="seriesProducts.length" class="series-representatives">
+              <router-link v-for="product in seriesProducts" :key="product.id" class="series-product-item" :to="`/product/${product.slug}`">
+                <div class="series-product-thumb">
+                  <img v-if="product.cover" :src="product.cover" :alt="product.name" loading="lazy" />
+                  <span v-else>QIAONONG</span>
+                </div>
+                <div class="series-product-info">
+                  <strong>{{ product.name }}</strong>
+                  <span class="series-product-hint">查看详情 →</span>
+                </div>
+              </router-link>
+            </div>
+            <p v-else class="series-empty-products">该分类暂无上架代表产品</p>
+          </div>
         </div>
       </div>
       <p v-else-if="!loading" class="empty-state">产品分类资料正在整理中。</p>
