@@ -77,15 +77,19 @@ a { color: inherit; }
 .series-tabs button:hover, .series-tabs button.active { color: var(--green); }
 .series-tabs button.active::after { right: 12px; left: 12px; }
 .series-tabs small { margin-right: 7px; color: var(--gold); font-family: Georgia, serif; font-size: 9px; }
-.series-showcase { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(390px, .85fr); min-height: 590px; background: #eef1ec; }
-.series-visual { position: relative; min-height: 590px; overflow: hidden; background: #cad5cf; text-decoration: none; }
+.series-showcase { position: relative; display: grid; overflow: hidden; grid-template-columns: minmax(0, 1.15fr) minmax(390px, .85fr); min-height: 520px; background: #607169; }
+.series-backdrop { position: absolute; z-index: 0; overflow: hidden; inset: 0; }
+.series-backdrop img { position: absolute; width: 100%; height: 100%; inset: 0; }
+.series-backdrop-ambient { transform: scale(1.06); filter: blur(22px) saturate(.72) brightness(.7); object-fit: cover; }
+.series-backdrop-artwork { object-fit: contain; }
+.series-backdrop::after { position: absolute; content: ""; background: linear-gradient(90deg, rgb(15 31 25 / 8%) 45%, rgb(15 31 25 / 22%)); inset: 0; }
+.series-backdrop .series-placeholder { width: 100%; height: 100%; }
+.series-visual { position: relative; z-index: 1; min-height: 520px; overflow: hidden; text-decoration: none; }
 .series-visual::after { position: absolute; inset: 0; content: ""; background: linear-gradient(0deg, rgb(10 29 22 / 45%), transparent 48%); }
-.series-visual img, .series-placeholder { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
-.series-visual:hover img, .series-visual:hover .series-placeholder { transform: scale(1.025); }
 .series-placeholder { display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, #bacac1, #476b5e); letter-spacing: .2em; }
 .series-visual-label { position: absolute; z-index: 2; right: 34px; bottom: 30px; left: 34px; display: flex; justify-content: space-between; color: #fff; font-size: 14px; }
 .series-visual-label i { color: #d9bd92; font-style: normal; font-size: 18px; }
-.series-copy { display: flex; min-width: 0; flex-direction: column; justify-content: center; padding: clamp(38px, 5vw, 72px); }
+.series-copy { position: relative; z-index: 1; display: flex; min-width: 0; flex-direction: column; justify-content: center; padding: clamp(34px, 4vw, 54px); border-left: 1px solid rgb(255 255 255 / 34%); background: rgb(238 241 236 / 58%); box-shadow: -24px 0 60px rgb(18 36 29 / 7%); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .series-copy h3 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: clamp(34px, 4vw, 50px); font-weight: 400; }
 .series-copy > div > p:not(.eyebrow) { margin: 18px 0 22px; color: #69756f; font-size: 14px; line-height: 1.9; }
 .series-children { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -223,9 +227,15 @@ a { color: inherit; }
   .series-tabs { margin-bottom: 0; padding: 0 15px; scrollbar-width: none; }
   .series-tabs::-webkit-scrollbar { display: none; }
   .series-tabs button { padding-right: 18px; padding-left: 18px; }
-  .series-showcase { grid-template-columns: 1fr; min-height: 0; }
-  .series-visual { min-height: 440px; }
-  .series-copy { padding: 42px 22px; }
+  .series-showcase { display: block; min-height: 0; background: #eef1ec; }
+  .series-backdrop { position: relative; aspect-ratio: 1920 / 378; }
+  .series-backdrop-ambient { display: none; }
+  .series-backdrop-artwork { object-fit: contain; }
+  .series-backdrop::after { background: linear-gradient(0deg, rgb(10 29 22 / 25%), transparent 62%); }
+  .series-visual { position: absolute; top: 0; right: 0; left: 0; min-height: 0; aspect-ratio: 1920 / 378; }
+  .series-visual::after { display: none; }
+  .series-visual-label { right: 18px; bottom: 13px; left: 18px; font-size: 12px; }
+  .series-copy { padding: 42px 22px; border-top: 1px solid rgb(255 255 255 / 55%); border-left: 0; background: rgb(238 241 236 / 94%); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .series-representatives { min-height: 125px; }
   .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
   .product-meta h3 { font-size: 16px; }

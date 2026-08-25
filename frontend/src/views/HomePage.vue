@@ -106,9 +106,14 @@ onBeforeUnmount(() => window.clearInterval(slideTimer))
         <button v-for="(category, index) in siteState.categories" :key="category.id" type="button" role="tab" :class="{ active: index === seriesIndex }" :aria-selected="index === seriesIndex" @click="selectSeries(index)"><small>0{{ index + 1 }}</small>{{ category.name }}</button>
       </div>
       <div v-if="currentSeries" class="series-showcase">
-        <router-link class="series-visual" :to="`/products/${currentSeries.slug}`">
-          <img v-if="currentSeries.banner" :src="currentSeries.banner" :alt="currentSeries.name" />
+        <div class="series-backdrop" aria-hidden="true">
+          <template v-if="currentSeries.banner">
+            <img class="series-backdrop-ambient" :src="currentSeries.banner" alt="" />
+            <img class="series-backdrop-artwork" :src="currentSeries.banner" alt="" />
+          </template>
           <div v-else class="series-placeholder"><span>QIAONONG</span></div>
+        </div>
+        <router-link class="series-visual" :to="`/products/${currentSeries.slug}`">
           <span class="series-visual-label">探索 {{ currentSeries.name }} <i>→</i></span>
         </router-link>
         <div class="series-copy">
