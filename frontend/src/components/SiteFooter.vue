@@ -1,5 +1,10 @@
 <script setup>
 import { siteState } from '../stores/site'
+
+const publicSecurityRecord = {
+  number: '辽公网安备21030302000219号',
+  url: 'https://beian.mps.gov.cn/#/query/webSearch?code=21030302000219',
+}
 </script>
 
 <template>
@@ -20,7 +25,13 @@ import { siteState } from '../stores/site'
     </div>
     <div class="footer-bottom">
       <span>© {{ new Date().getFullYear() }} {{ siteState.settings.company_name || siteState.settings.site_name || '巧侬' }}</span>
-      <a v-if="siteState.settings.icp_number" :href="siteState.settings.icp_url" rel="noopener" target="_blank">{{ siteState.settings.icp_number }}</a>
+      <div class="footer-records">
+        <a v-if="siteState.settings.icp_number" :href="siteState.settings.icp_url" rel="noopener" target="_blank">{{ siteState.settings.icp_number }}</a>
+        <a class="public-security-record" :href="publicSecurityRecord.url" rel="noopener noreferrer" target="_blank">
+          <img src="/gongan-beian.png" alt="" width="18" height="20" />
+          <span>{{ publicSecurityRecord.number }}</span>
+        </a>
+      </div>
     </div>
   </footer>
 </template>
