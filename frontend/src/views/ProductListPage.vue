@@ -56,7 +56,9 @@ watch(() => route.fullPath, load, { immediate: true })
 
 <template>
   <main>
-    <section class="page-hero compact" :class="{ 'with-image': heroImage }" :style="heroImage ? { backgroundImage: `url(${heroImage})` } : {}"></section>
+    <section class="page-hero compact catalog-hero" :class="{ 'with-image': heroImage }">
+      <img v-if="heroImage" :src="heroImage" :alt="`${currentRootCategory?.name || '产品中心'}横幅`" />
+    </section>
     <section class="catalog-layout content-section">
       <aside class="category-sidebar">
         <router-link :class="{ active: !route.params.category && !searchMode }" to="/products">全部产品</router-link>

@@ -14,9 +14,19 @@ const seriesIndex = ref(0)
 const loading = ref(true)
 const seriesLoading = ref(false)
 const autoplayPaused = ref(false)
+const failedSlideIds = ref([])
 const seriesProductCache = new Map()
 let slideTimer
-const currentSlide = computed(() => slides.value[slideIndex.value])
+const fallbackSlide = {
+  id: 'local-fallback',
+  image: '/hero-fallback.svg',
+  mobile_image: '/hero-fallback.svg',
+  title: '',
+  subtitle: '',
+}
+const availableSlides = computed(() => slides.value.filter((slide) => !failedSlideIds.value.includes(slide.id)))
+const displaySlides = computed(() => availableSlides.value.length ? availableSlides.value : [fallbackSlide])
+const currentSlide = computed(() => displaySlides.value[slideIndex.value % displaySlides.value.length])
 const currentSeries = computed(() => siteState.categories[seriesIndex.value])
 const heroTitle = computed(() => currentSlide.value
   ? currentSlide.value.title
@@ -28,15 +38,23 @@ const showHeroCopy = computed(() => !currentSlide.value
   || Boolean(currentSlide.value.title || currentSlide.value.subtitle))
 
 function nextSlide() {
-  if (!autoplayPaused.value && slides.value.length > 1) {
-    slideIndex.value = (slideIndex.value + 1) % slides.value.length
+  if (!autoplayPaused.value && displaySlides.value.length > 1) {
+    slideIndex.value = (slideIndex.value + 1) % displaySlides.value.length
   }
 }
 
 function selectSlide(index) {
   slideIndex.value = index
   window.clearInterval(slideTimer)
-  slideTimer = window.setInterval(nextSlide, 5000)
+  if (displaySlides.value.length > 1) slideTimer = window.setInterval(nextSlide, 5000)
+}
+
+function handleSlideError(slide) {
+  if (slide.id === fallbackSlide.id || failedSlideIds.value.includes(slide.id)) return
+  failedSlideIds.value = [...failedSlideIds.value, slide.id]
+  slideIndex.value = 0
+  window.clearInterval(slideTimer)
+  if (displaySlides.value.length > 1) slideTimer = window.setInterval(nextSlide, 5000)
 }
 
 async function selectSeries(index) {
@@ -75,7 +93,7 @@ onMounted(async () => {
   } finally {
     if (siteState.categories.length) await selectSeries(0)
     loading.value = false
-    if (slides.value.length > 1) slideTimer = window.setInterval(nextSlide, 5000)
+    if (displaySlides.value.length > 1) slideTimer = window.setInterval(nextSlide, 5000)
   }
 })
 
@@ -84,10 +102,10 @@ onBeforeUnmount(() => window.clearInterval(slideTimer))
 
 <template>
   <main>
-    <section class="hero" :class="{ 'image-only': currentSlide?.image && !showHeroCopy, 'has-image': currentSlide?.image, 'with-copy': currentSlide?.image && showHeroCopy, clickable: currentSlide?.link_url }" @mouseenter="autoplayPaused = true" @mouseleave="autoplayPaused = false" @focusin="autoplayPaused = true" @focusout="autoplayPaused = false">
+    <section class="hero" :class="{ 'hero-loading': loading, 'image-only': currentSlide?.image && !showHeroCopy, 'has-image': currentSlide?.image, 'with-copy': currentSlide?.image && showHeroCopy, clickable: currentSlide?.link_url }" @mouseenter="autoplayPaused = true" @mouseleave="autoplayPaused = false" @focusin="autoplayPaused = true" @focusout="autoplayPaused = false">
       <picture v-if="currentSlide?.image" class="hero-media">
         <source media="(max-width: 640px)" :srcset="currentSlide.mobile_image || currentSlide.image" />
-        <img :src="currentSlide.image" :alt="currentSlide.title || '巧侬花田首页轮播图'" />
+        <img :src="currentSlide.image" :alt="currentSlide.title || '巧侬花田首页轮播图'" @error="handleSlideError(currentSlide)" />
       </picture>
       <router-link v-if="currentSlide?.link_url" class="hero-slide-link" :to="currentSlide.link_url" :aria-label="`查看第 ${slideIndex + 1} 张轮播图内容`"></router-link>
       <div v-if="showHeroCopy" class="hero-content">
@@ -97,7 +115,7 @@ onBeforeUnmount(() => window.clearInterval(slideTimer))
         <router-link v-if="currentSlide?.link_url" class="outline-link" :to="currentSlide.link_url">了解更多</router-link>
         <router-link v-else class="outline-link" to="/products">浏览产品</router-link>
       </div>
-      <div v-if="slides.length > 1" class="slide-dots"><button v-for="(_, index) in slides" :key="index" :class="{ active: index === slideIndex }" :aria-current="index === slideIndex ? 'true' : undefined" :aria-label="`切换到第 ${index + 1} 张`" @click.stop="selectSlide(index)"></button></div>
+      <div v-if="displaySlides.length > 1" class="slide-dots"><button v-for="(slide, index) in displaySlides" :key="slide.id" :class="{ active: index === slideIndex }" :aria-current="index === slideIndex ? 'true' : undefined" :aria-label="`切换到第 ${index + 1} 张`" @click.stop="selectSlide(index)"></button></div>
     </section>
 
     <section class="content-section series-section">

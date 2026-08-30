@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 
 import SiteFooter from './SiteFooter.vue'
 import SiteHeader from './SiteHeader.vue'
+import FloatingContact from './FloatingContact.vue'
 import { loadSite } from '../stores/site'
 
 onMounted(loadSite)
@@ -13,5 +14,6 @@ onMounted(loadSite)
     <SiteHeader />
     <router-view />
     <SiteFooter />
+    <FloatingContact />
   </div>
 </template>

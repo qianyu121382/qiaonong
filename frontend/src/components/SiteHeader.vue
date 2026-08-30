@@ -1,17 +1,28 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { siteState } from '../stores/site'
 
 
 const router = useRouter()
+const route = useRoute()
 const menuOpen = ref(false)
 const searchOpen = ref(false)
 const keyword = ref('')
 
 function closeMenu() {
   menuOpen.value = false
+}
+
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+  if (menuOpen.value) searchOpen.value = false
+}
+
+function toggleSearch() {
+  searchOpen.value = !searchOpen.value
+  if (searchOpen.value) menuOpen.value = false
 }
 
 function submitSearch() {
@@ -21,6 +32,11 @@ function submitSearch() {
   menuOpen.value = false
   router.push({ name: 'search', query: { q: value } })
 }
+
+watch(() => route.fullPath, () => {
+  menuOpen.value = false
+  searchOpen.value = false
+})
 </script>
 
 <template>
@@ -29,8 +45,8 @@ function submitSearch() {
       <img v-if="siteState.settings.logo" :src="siteState.settings.logo" :alt="siteState.settings.site_name" />
       <span v-else><small>QIAONONG</small><strong>{{ siteState.settings.site_name || '巧侬' }}</strong></span>
     </router-link>
-    <button class="menu-toggle" :aria-expanded="menuOpen" aria-label="打开导航" @click="menuOpen = !menuOpen"><i></i><i></i><i></i></button>
-    <nav :class="{ open: menuOpen }" @click="closeMenu">
+    <button class="menu-toggle" :class="{ active: menuOpen }" :aria-expanded="menuOpen" :aria-label="menuOpen ? '关闭导航' : '打开导航'" aria-controls="site-navigation" @click="toggleMenu"><i></i><i></i><i></i></button>
+    <nav id="site-navigation" :class="{ open: menuOpen }" @click="closeMenu">
       <router-link to="/">首页</router-link>
       <router-link to="/brand">品牌介绍</router-link>
       <div v-for="category in siteState.categories" :key="category.id" class="nav-group" :class="{ 'has-children': category.children?.length }">
@@ -50,7 +66,7 @@ function submitSearch() {
       </div>
       <router-link to="/contact">联系我们</router-link>
     </nav>
-    <button class="search-toggle" aria-label="搜索" @click="searchOpen = !searchOpen">⌕</button>
+    <button class="search-toggle" :aria-expanded="searchOpen" aria-label="搜索" @click="toggleSearch">⌕</button>
     <form v-if="searchOpen" class="search-panel" @submit.prevent="submitSearch">
       <label for="site-search">搜索产品</label>
       <div><input id="site-search" v-model="keyword" autofocus placeholder="输入产品名称或关键词" /><button type="submit">搜索</button></div>

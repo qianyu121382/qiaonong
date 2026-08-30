@@ -1,10 +1,12 @@
 # 巧侬 CD 方案与接入说明
 
-最后更新：2026-08-25
+最后更新：2026-08-30
 
 ## 1. 当前状态
 
 巧侬安全 CD 已完成仓库实现、服务器安装和首次真实生产部署。首次验收提交为 `601589d475d3c4e9e6c273133c17c6f81eb31083`，对应的精确 SHA push Checks 和 Deploy production 均已成功。生产环境当前提交以服务器 `/srv/qiaonong/app` 的 `HEAD` 和最近一次成功的 Deploy production 记录为准。
+
+2026-08-30 再次验证：最新 `main` 提交 `40e29f1` 的 Checks 与自动 Deploy production 均成功，正式官网、管理登录入口和健康接口正常。
 
 2026-08-25 已完成：
 
