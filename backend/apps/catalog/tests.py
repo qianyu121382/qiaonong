@@ -193,6 +193,26 @@ class AdminCatalogApiTests(TestCase):
         self.assertEqual(delete_response.status_code, 204)
         self.assertFalse(Category.objects.filter(pk=category.pk).exists())
 
+    def test_changing_a_root_to_child_clears_its_banner(self):
+        parent = Category.objects.create(name="护肤", slug="skin-care")
+        category = Category.objects.create(
+            name="院护",
+            slug="salon-care",
+            banner="catalog/categories/salon-care.jpg",
+        )
+        self.client.force_authenticate(self.staff)
+
+        response = self.client.patch(
+            reverse("admin-category-detail", kwargs={"pk": category.pk}),
+            {"parent": parent.pk},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        category.refresh_from_db()
+        self.assertEqual(category.parent, parent)
+        self.assertFalse(category.banner)
+
     def test_staff_user_cannot_delete_category_with_children_or_products(self):
         root = Category.objects.create(name="护肤", slug="skin-care")
         child = Category.objects.create(name="面膜", slug="masks", parent=root)

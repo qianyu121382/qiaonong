@@ -41,12 +41,31 @@ function triggerGallerySelect() {
   galleryFileInputRef.value?.click()
 }
 
-const categoryOptions = computed(() =>
-  categories.value.map((cat) => ({
-    ...cat,
-    label: cat.parent ? `　└ ${cat.name}` : cat.name,
-  }))
-)
+const categoryOptions = computed(() => {
+  const roots = categories.value
+    .filter((cat) => !cat.parent)
+    .sort((a, b) => a.sort_order - b.sort_order || a.id - b.id)
+
+  return roots.flatMap((root) => {
+    const children = categories.value
+      .filter((cat) => cat.parent === root.id)
+      .sort((a, b) => a.sort_order - b.sort_order || a.id - b.id)
+      .map((child) => ({
+        ...child,
+        label: `　└ ${child.name}（所属：${root.name}）`,
+        effectiveActive: child.is_active && root.is_active,
+      }))
+
+    return [
+      {
+        ...root,
+        label: `[一级] ${root.name}`,
+        effectiveActive: root.is_active,
+      },
+      ...children,
+    ]
+  })
+})
 
 function getCategoryName(categoryId) {
   const c = categories.value.find((item) => item.id === categoryId)
@@ -112,8 +131,12 @@ const filteredProducts = computed(() => {
       if (!matchName && !matchTag && !matchSpec) return false
     }
     // Category
-    if (queryParams.category && item.category !== queryParams.category) {
-      return false
+    if (queryParams.category) {
+      const selected = categories.value.find((cat) => cat.id === queryParams.category)
+      const matchingIds = selected && !selected.parent
+        ? new Set([selected.id, ...categories.value.filter((cat) => cat.parent === selected.id).map((cat) => cat.id)])
+        : new Set([queryParams.category])
+      if (!matchingIds.has(item.category)) return false
     }
     // Is Active
     if (queryParams.isActive === 'true' && !item.is_active) return false
@@ -150,8 +173,10 @@ function resetQuery() {
 // Dialog Handlers
 function handleAdd() {
   replace(productForm, emptyProduct())
-  if (categories.value.length > 0) {
-    productForm.category = categories.value[0].id
+  const defaultCategory = categoryOptions.value.find((cat) => cat.parent && cat.effectiveActive)
+    || categoryOptions.value.find((cat) => cat.effectiveActive)
+  if (defaultCategory) {
+    productForm.category = defaultCategory.id
   }
   coverFile.value = null
   hoverFile.value = null
@@ -301,7 +326,7 @@ onMounted(loadData)
           >
             <option value="">全部</option>
             <option v-for="cat in categoryOptions" :key="cat.id" :value="cat.id">
-              {{ cat.label }}
+              {{ cat.label }}{{ cat.effectiveActive ? '' : '（当前隐藏）' }}
             </option>
           </select>
         </div>
@@ -530,8 +555,13 @@ onMounted(loadData)
               </label>
               <select v-model="productForm.category" class="ry-select" required>
                 <option value="" disabled>请选择所属分类</option>
-                <option v-for="cat in categoryOptions" :key="cat.id" :value="cat.id">
-                  {{ cat.label }}
+                <option
+                  v-for="cat in categoryOptions"
+                  :key="cat.id"
+                  :value="cat.id"
+                  :disabled="!cat.effectiveActive && cat.id !== productForm.category"
+                >
+                  {{ cat.label }}{{ cat.effectiveActive ? '' : '（当前隐藏）' }}
                 </option>
               </select>
             </div>

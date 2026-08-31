@@ -135,7 +135,7 @@ class ProductListSeoView(View):
                 raise Http404 from error
             title = category.name
             description = _plain(category.description) or f"浏览巧侬花田{category.name}系列及相关产品资料。"
-            image = _image_url(category.banner)
+            image = _image_url(category.parent.banner if category.parent_id else category.banner)
             if category.parent_id:
                 products = products.filter(category=category)
             else:

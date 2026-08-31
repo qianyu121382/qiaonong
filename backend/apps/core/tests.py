@@ -172,6 +172,28 @@ class SeoViewTests(TestCase):
         self.assertContains(response, "温和保湿产品资料")
         self.assertContains(response, '"@type": "Product"')
 
+    def test_child_category_uses_parent_banner_for_social_metadata(self):
+        from apps.catalog.models import Category
+
+        self.category.banner = "catalog/categories/skin-care.jpg"
+        self.category.save(update_fields=["banner"])
+        child = Category.objects.create(
+            name="面膜系列",
+            slug="masks",
+            parent=self.category,
+            is_active=True,
+        )
+
+        response = self.client.get(
+            reverse("seo-product-list", kwargs={"slug": child.slug})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'property="og:image" content="https://zgqnht.com/media/catalog/categories/skin-care.jpg"',
+        )
+
     def test_unknown_product_and_category_return_not_found(self):
         self.assertEqual(
             self.client.get(

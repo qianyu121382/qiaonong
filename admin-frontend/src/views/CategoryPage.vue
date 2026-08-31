@@ -126,7 +126,8 @@ const filteredTree = computed(() => {
       if (rootSelfMatch || matchingChildren.length > 0) {
         return {
           ...root,
-          filteredChildren: kw ? matchingChildren : root.children,
+          isGhostRoot: !rootSelfMatch,
+          filteredChildren: (kw || act) ? matchingChildren : root.children,
         }
       }
 
@@ -154,6 +155,16 @@ const parentOptions = computed(() =>
 const editingHasChildren = computed(() =>
   Boolean(categoryForm.id && categories.value.some((item) => item.parent === categoryForm.id))
 )
+
+const selectedParent = computed(() =>
+  categories.value.find((item) => item.id === categoryForm.parent) || null
+)
+
+function parentIsInactive(item) {
+  if (!item.parent) return false
+  const parent = categories.value.find((category) => category.id === item.parent)
+  return Boolean(parent && !parent.is_active)
+}
 
 // 是否全部折叠
 const isAllCollapsed = computed(() => {
@@ -281,7 +292,13 @@ async function handleQuickToggleActive(item) {
       body: { is_active: nextActive },
     })
     item.is_active = nextActive
-    showToast('已' + actionText + '分类“' + item.name + '”，前台将同步联动', 'success')
+    const inheritedHidden = nextActive && parentIsInactive(item)
+    showToast(
+      inheritedHidden
+        ? '已启用分类“' + item.name + '”，但所属一级分类已停用，前台仍会隐藏'
+        : '已' + actionText + '分类“' + item.name + '”，前台将同步联动',
+      'success'
+    )
   } catch (error) {
     showToast(error.message || (actionText + '分类失败'), 'error')
   }
@@ -642,13 +659,13 @@ onMounted(loadData)
                 <td style="text-align: center;">
                   <button
                     class="status-toggle-pill"
-                    :class="child.is_active ? 'active' : 'inactive'"
+                    :class="child.is_active && !parentIsInactive(child) ? 'active' : 'inactive'"
                     type="button"
-                    :title="child.is_active ? '点击停用该二级分类' : '点击启用该二级分类'"
+                    :title="parentIsInactive(child) && child.is_active ? '所属一级分类已停用，前台当前不会展示；点击可同时停用该二级分类' : (child.is_active ? '点击停用该二级分类' : '点击启用该二级分类')"
                     @click="handleQuickToggleActive(child)"
                   >
                     <span class="status-dot"></span>
-                    <span>{{ child.is_active ? '已启用' : '已停用' }}</span>
+                    <span>{{ parentIsInactive(child) && child.is_active ? '上级停用' : (child.is_active ? '已启用' : '已停用') }}</span>
                   </button>
                 </td>
 
@@ -741,7 +758,7 @@ onMounted(loadData)
                 v-for="child in root.filteredChildren"
                 :key="'card-child-' + child.id"
                 class="child-item"
-                :class="{ inactive: !child.is_active }"
+                :class="{ inactive: !child.is_active || parentIsInactive(child) }"
               >
                 <div class="child-item-left">
                   <span class="child-item-dot"></span>
@@ -750,6 +767,7 @@ onMounted(loadData)
                     <span class="child-item-order">#{{ child.sort_order }}</span>
                   </div>
                   <span v-if="!child.is_active" class="child-item-inactive-tag">已停用</span>
+                  <span v-else-if="parentIsInactive(child)" class="child-item-inactive-tag">上级停用</span>
                 </div>
 
                 <div class="child-item-actions">
@@ -856,7 +874,9 @@ onMounted(loadData)
                 <strong>在官网公开展示并参与导航与首页系列联动</strong>
               </label>
               <span class="active-switch-desc">
-                {{ categoryForm.is_active ? '当前状态：已启用，前台访客可正常浏览。' : '当前状态：已停用，前台所有页面将隐藏此分类。' }}
+                {{ formLevel === 2 && categoryForm.is_active && selectedParent && !selectedParent.is_active
+                  ? '所属一级分类已停用；即使当前二级分类启用，前台仍会隐藏。'
+                  : (categoryForm.is_active ? '当前状态：已启用，前台访客可正常浏览。' : '当前状态：已停用，前台所有页面将隐藏此分类。') }}
               </span>
             </div>
           </div>

@@ -108,6 +108,8 @@ class AdminCategorySerializer(serializers.ModelSerializer):
             category.clean()
         except DjangoValidationError as error:
             raise serializers.ValidationError(error.message_dict) from error
+        if category.parent_id:
+            attrs["banner"] = ""
         return attrs
 
 
